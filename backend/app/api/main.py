@@ -22,6 +22,17 @@ async def _lifespan(app: "FastAPI"):
 
 app = FastAPI(title="listenyourPDFs", version="0.1.0", lifespan=_lifespan)
 
+from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
+
+app.add_middleware(
+    CORSMiddleware,
+    # La PWA puede servirse desde otro origen (dev :3000, o dominio distinto al de la API).
+    # Auth por Bearer/token en query, sin cookies, así que "*" no expone credenciales.
+    allow_origins=[o.strip() for o in __import__("os").environ.get("LYP_CORS_ORIGINS", "*").split(",")],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 def auth(request: Request) -> None:
     if not settings.auth_token:
@@ -81,10 +92,14 @@ def get_document(doc_id: int):
         " FROM blocks WHERE document_id=? ORDER BY idx",
         (doc_id,),
     ).fetchall()
+    pos = conn.execute(
+        "SELECT block_id, offset_ms FROM positions WHERE document_id=?", (doc_id,)
+    ).fetchone()
     return {
         **dict(doc),
         "sections": [dict(s) for s in sections],
         "playlist": [dict(b) for b in blocks],
+        "position": dict(pos) if pos else None,
     }
 
 

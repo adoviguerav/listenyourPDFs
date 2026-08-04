@@ -1,0 +1,73 @@
+/* Diseño móvil-primero para uso en movimiento: botones enormes, contraste alto. */
+:root {
+  --bg: #f6f7f5;
+  --panel: #ffffff;
+  --ink: #1c2422;
+  --muted: #5b6663;
+  --accent: #0e7a6c;
+  --accent-ink: #ffffff;
+  --line: #dde3e0;
+  --ok: #177245;
+  --warn: #b3541e;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #141817;
+    --panel: #1d2321;
+    --ink: #e8ecea;
+    --muted: #9aa5a1;
+    --accent: #2fbfa9;
+    --accent-ink: #0b1512;
+    --line: #2c3532;
+    --ok: #4cc07a;
+    --warn: #e08a4e;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.5 -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+main { max-width: 42rem; margin: 0 auto; padding: 1rem; }
+h1 { font-size: 1.3rem; margin: 0.5rem 0 1rem; }
+h2 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 0 0 0.6rem; }
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 0.9rem;
+}
+button { font: inherit; cursor: pointer; }
+.btn {
+  display: inline-block;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+  font-weight: 600;
+}
+.btn-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn-xl { width: 100%; padding: 1.2rem; font-size: 1.25rem; border-radius: 14px; }
+.btn:active { transform: scale(0.98); }
+.btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.muted { color: var(--muted); font-size: 0.9rem; }
+.row { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+.doc-item { display: block; text-decoration: none; color: inherit; }
+.progress { height: 6px; background: var(--line); border-radius: 999px; overflow: hidden; margin-top: 0.5rem; }
+.progress > div { height: 100%; background: var(--accent); }
+.chip { font-size: 0.78rem; border: 1px solid var(--line); color: var(--muted); border-radius: 999px; padding: 0.1rem 0.6rem; }
+.chip.ok { color: var(--ok); border-color: var(--ok); }
+.chip.warn { color: var(--warn); border-color: var(--warn); }
+.player-time { font-variant-numeric: tabular-nums; font-size: 1.5rem; font-weight: 700; }
+.block-text { font-size: 1.05rem; line-height: 1.65; }
+input[type="file"] { display: none; }
+input[type="password"], input[type="text"] {
+  font: inherit; width: 100%; padding: 0.7rem; border-radius: 10px;
+  border: 1px solid var(--line); background: var(--bg); color: var(--ink);
+}
+a { color: var(--accent); }
