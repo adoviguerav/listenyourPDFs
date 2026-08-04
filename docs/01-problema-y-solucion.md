@@ -1,6 +1,11 @@
 # listenyourPDFs — Problema, solución y requisitos funcionales
 
-> Versión 0.1 — documento de definición de producto. Vivo: se refina con cada decisión.
+> Versión 0.2 — documento de definición de producto. Vivo: se refina con cada decisión.
+
+**Naturaleza del proyecto: open source (MIT), personal-first.** No es un SaaS: es una
+herramienta que resuelve el problema para su autor y que cualquiera puede self-hostear
+con sus propias API keys (BYOK: bring your own keys). Sin pagos, sin planes, sin
+telemetría. El éxito se mide en uso diario real y en comunidad, no en ingresos.
 
 ## 1. El problema
 
@@ -88,10 +93,13 @@ Prioridad MoSCoW: **M** (must, MVP) / **S** (should, v1) / **C** (could, despué
 - **RF-6.2 (S)** Estadísticas: tiempo escuchado, % de acierto en preguntas, elementos en cola de repaso.
 - **RF-6.3 (C)** Colecciones/carpetas y búsqueda semántica en toda la biblioteca ("¿en qué paper hablaban de X?").
 
-### RF-7. Cuentas y plataforma
-- **RF-7.1 (M)** Autenticación de usuario; documentos y progreso privados por usuario.
-- **RF-7.2 (M)** Web app responsive usable desde el móvil (PWA-friendly): el caso de uso principal es móvil + auriculares.
-- **RF-7.3 (C)** Apps nativas iOS/Android si la PWA se queda corta (audio en background es el riesgo a validar).
+### RF-7. Plataforma y self-hosting
+- **RF-7.1 (M)** Web app responsive usable desde el móvil (PWA-friendly): el caso de uso principal es móvil + auriculares.
+- **RF-7.2 (M)** BYOK: las API keys (LLM y TTS) se configuran por variables de entorno del que lo despliega; nunca se suben al repo.
+- **RF-7.3 (M)** Despliegue en un comando (Docker Compose o similar) con documentación de self-hosting en el README.
+- **RF-7.4 (S)** Proveedores de LLM/TTS intercambiables tras una interfaz común (que cada uno use el que quiera/pueda pagar).
+- **RF-7.5 (C)** Multiusuario con autenticación, para quien despliegue una instancia compartida.
+- **RF-7.6 (C)** Apps nativas iOS/Android si la PWA se queda corta (audio en background es el riesgo a validar).
 
 ## 5. Requisitos no funcionales (mínimos)
 
@@ -102,15 +110,20 @@ Prioridad MoSCoW: **M** (must, MVP) / **S** (should, v1) / **C** (could, despué
 
 ## 6. Alcance del MVP (propuesta)
 
-Todo lo marcado **M**: subir PDF nativo → extracción + limpieza → audio Completo y Resumen con TTS natural (ES/EN) → reproductor con sync de texto → Q&A por texto anclado al doc → preguntas de recall por sección → marcas → biblioteca con progreso → auth. 
+Todo lo marcado **M**: subir PDF nativo → extracción + limpieza → audio Completo y Resumen con TTS natural (ES/EN) → reproductor con sync de texto → Q&A por texto anclado al doc → preguntas de recall por sección → marcas → biblioteca con progreso → BYOK + despliegue en un comando.
 
-Fuera del MVP: voz bidireccional, repaso espaciado, OCR, tablas/ecuaciones habladas, apps nativas.
+Fuera del MVP: voz bidireccional, repaso espaciado, OCR, tablas/ecuaciones habladas, multiusuario, apps nativas.
 
-**Criterio de éxito del MVP:** una persona termina un paper de 15 páginas íntegramente andando/conduciendo, responde bien >70% de las preguntas de recall al día siguiente, y prefiere esto a Speechify.
+**Criterio de éxito del MVP:** el autor termina un paper de 15 páginas íntegramente andando, responde bien >70% de las preguntas de recall al día siguiente, y lo prefiere a Speechify/Listening.com. Segundo criterio (OSS): otra persona consigue desplegarlo con sus keys siguiendo solo el README.
 
-## 7. Preguntas abiertas
+## 7. Decisiones tomadas
 
-1. ¿Primer vertical: papers académicos (como Listening.com) o generalista? Los papers dan foco técnico y usuario claro; generalista da mercado mayor.
-2. ¿Voz bidireccional en v1 o validar antes con Q&A por texto? (La voz es el "wow" pero dispara coste y complejidad.)
-3. ¿PWA vs nativo? El audio en background con pantalla bloqueada en iOS-PWA es limitado — riesgo técnico nº 1 a validar la primera semana.
-4. Motor TTS: calidad (ElevenLabs) vs coste (OpenAI TTS / Google) — decidir con una prueba ciega sobre un paper real en español.
+- **Open source (MIT), personal-first.** No hay objetivo de monetización; el valor es la herramienta en sí, el aprendizaje y el portfolio. (2026-08-04)
+- **Mono-usuario en el MVP.** Sin auth ni pagos; multiusuario queda como C para instancias compartidas. (2026-08-04)
+
+## 8. Preguntas abiertas
+
+1. ¿Voz bidireccional en v1 o validar antes con Q&A por texto? (La voz es el "wow" pero dispara coste y complejidad.)
+2. ¿PWA vs nativo? El audio en background con pantalla bloqueada en iOS-PWA es limitado — riesgo técnico nº 1 a validar la primera semana.
+3. Motor TTS por defecto: calidad (ElevenLabs) vs coste (OpenAI TTS / Google / TTS local tipo Kokoro para self-hosting 100% gratis) — decidir con una prueba ciega sobre un paper real en español.
+4. Stack: definir en `docs/02-arquitectura.md` (siguiente paso).
