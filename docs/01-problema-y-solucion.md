@@ -57,7 +57,7 @@ El "10x": tiempo muerto convertido en estudio (2-3x) × priorización dirigida (
 | D13 | Hosting personal | **VPS (Hetzner ~6-9€/mes) + Coolify/Dokploy** compartido con las demás apps del autor | Coste fijo multi-app, deploy automático desde GitHub |
 | D14 | Recall / aprendizaje activo | **v1, junto al push-to-talk** (su forma natural es por voz). MVP = escuchar bien | Evitar construirlo dos veces |
 | D15 | Presupuesto APIs | **10-20€/mes** para uso personal (~10-15 papers/mes con TTS API + Claude) | Marca el nivel de cacheo/optimización necesario |
-| D16 | Feed RSS podcast | **Aparcado como contingencia**: solo se activa si el audio en background de la PWA falla en iOS (1-2 días, 0€) | El autor no lo ve necesario de partida |
+| D16 | Feed RSS podcast | **Plan B decidido por el autor**: solo se activa si la prueba de la semana 1 muestra que iOS corta el audio de la PWA (1-2 días, 0€). Su único fin: escuchar los PDFs vía Apple Podcasts con reproducción nativa garantizada | Redundante si la PWA reproduce bien en iPhone |
 
 ## 5. Requisitos funcionales
 
