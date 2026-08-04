@@ -112,9 +112,10 @@ Prioridad MoSCoW: **M** (must, MVP) / **S** (should, v1) / **C** (could, despué
 - **RF-7.2 (M)** BYOK: API keys por variables de entorno; nunca en el repo ni en el cliente.
 - **RF-7.3 (M)** Despliegue en un comando (Docker Compose) + guía de self-hosting en README (VPS/Coolify como camino documentado — D13).
 - **RF-7.4 (M)** Proveedores LLM/TTS/STT intercambiables tras interfaz común (D6-D7): Claude/OpenAI/Gemini/Ollama; OpenAI-o-Gemini TTS/Kokoro/ElevenLabs; Whisper API o local.
-- **RF-7.5 (C)** Feed RSS privado con token (contingencia iOS — D16).
-- **RF-7.6 (C)** Multiusuario con autenticación para instancias compartidas.
-- **RF-7.7 (C)** Wrapper Capacitor iOS (activar solo si RF-3.3 falla en PWA).
+- **RF-7.5 (M)** Onboarding por QR: la instancia muestra un código QR (en la web de escritorio y al arrancar el servidor) que al escanearlo con el móvil abre la PWA lista para "Añadir a pantalla de inicio" — instalación sin stores en Android e iPhone.
+- **RF-7.6 (C)** Feed RSS privado con token (contingencia iOS — D16).
+- **RF-7.7 (C)** Multiusuario con autenticación para instancias compartidas.
+- **RF-7.8 (C)** Wrapper Capacitor: iOS solo si RF-3.3 falla en PWA; APK Android publicado en GitHub Releases (instalable por QR) como distribución alternativa para usuarios OSS.
 
 ## 6. Requisitos no funcionales
 
@@ -128,7 +129,7 @@ Prioridad MoSCoW: **M** (must, MVP) / **S** (should, v1) / **C** (could, despué
 
 ## 7. Alcance por fases
 
-**MVP ("escuchar bien"):** RF-1.1–1.4, RF-2.1–2.2, RF-3.1–3.4, RF-4.1–4.3, RF-5.2, RF-6.1, RF-7.1–7.4. Push-to-talk incluido. Un usuario, sin auth.
+**MVP ("escuchar bien"):** RF-1.1–1.4, RF-2.1–2.2, RF-3.1–3.4, RF-4.1–4.3, RF-5.2, RF-6.1, RF-7.1–7.5. Push-to-talk incluido. Un usuario, sin auth.
 
 **v1 ("aprender"):** recall por voz (RF-5.1, 5.3, 5.4), niveles guiado/resumen (RF-2.3–2.6), tablas/ecuaciones (RF-1.5–1.6), comandos de voz (RF-4.4), offline (RF-3.5), estadísticas (RF-6.2).
 
