@@ -7,8 +7,11 @@
 
 Tutor de audio open source y self-hosted para PDFs: el servidor convierte cualquier PDF
 en audio limpio que escuchas como un podcast desde el móvil, puedes dirigirlo ("léeme la
-sección 3") y preguntarle por voz, y más adelante se asegura de que lo escuchado se
-retiene (recall + repaso espaciado).
+sección 3") y preguntarle por voz, y se asegura de que lo escuchado se retiene.
+
+**Visión final — el framework de aprendizaje completo en los cascos:**
+esquema previo (intro 60s) → escuchar → explicar tú (modo Feynman: el tutor te señala
+huecos) → repasar y recordar (recall + repaso espaciado FSRS).
 
 ## Usuarios
 
@@ -45,7 +48,7 @@ fase termina con código pusheado, tests en verde y una demo utilizable.
 
 **Objetivo:** el corazón del producto. Un PDF entra, sale audio limpio escuchable, sin UI todavía (API + CLI).
 
-**Alcance (RF):** RF-1.1–1.4 (ingesta adaptativa, estructura navegable, limpieza), RF-2.1 (nivel Completo), RF-3.2 (TTS ES/EN, idioma original), RNF-1 (play en <60s vía chunks), RNF-2 (cache de audio, contador de coste).
+**Alcance (RF):** RF-1.1–1.4 (ingesta adaptativa, estructura navegable, limpieza), RF-2.0 (intro de 60s generada desde la estructura), RF-2.1 (nivel Completo), RF-3.2 (TTS ES/EN, idioma original), RNF-1 (play en <60s vía chunks), RNF-2 (cache de audio, contador de coste).
 
 **Entregable:** `POST /documents` con un PDF → estado de procesamiento → lista de chunks de audio reproducibles por sección + estructura del documento en JSON.
 
@@ -59,7 +62,7 @@ fase termina con código pusheado, tests en verde y una demo utilizable.
 
 **Objetivo:** escuchar de verdad desde el iPhone andando. El "modo podcast" completo.
 
-**Alcance (RF):** RF-3.1 (controles, velocidad, saltos), RF-3.3 (background + Media Session; aplicar veredicto S0.1), RF-3.4 (sync audio↔texto, posición persistida), RF-2.2 (navegación dirigida por índice tocable), RF-5.2 (marcas), RF-6.1 (biblioteca con progreso), RF-7.1 (PWA instalable), RF-7.5 (QR onboarding), RF-7.6 (feed RSS privado: botón "enviar a podcast" por documento → genera el audio restante, concatena y publica episodio).
+**Alcance (RF):** RF-3.1 (controles, velocidad, saltos), RF-3.3 (background + Media Session; aplicar veredicto S0.1), RF-3.4 (sync audio↔texto, posición persistida), RF-2.0b (recap "anteriormente…" al retomar tras ≥1 día), RF-2.2 (navegación dirigida por índice tocable), RF-5.2 (marcas con botón diseñado para uso a ciegas: grande, pulgar, háptica), RF-6.1 (biblioteca con progreso), RF-7.1 (PWA instalable), RF-7.5 (QR onboarding), RF-7.6 (feed RSS privado: botón "enviar a podcast" por documento → genera el audio restante, concatena y publica episodio).
 
 **Entregable:** PWA instalada en el iPhone del autor; sube un PDF desde el móvil, y lo escucha entero con pantalla bloqueada.
 
@@ -99,7 +102,7 @@ fase termina con código pusheado, tests en verde y una demo utilizable.
 
 ## v1 — "Aprender" (post-MVP, fases 5-7 orientativas)
 
-- **Fase 5 — Recall y repaso:** RF-5.1 (preguntas por sección vía push-to-talk), RF-5.3 (cola FSRS, repaso en audio al abrir sesión), RF-5.4 (ficha Markdown por documento).
+- **Fase 5 — Recall, Feynman y repaso:** RF-5.1 (preguntas por sección vía push-to-talk), RF-5.2b (modo Feynman: explicas tú por voz y el tutor señala huecos contra el documento), RF-5.3 (cola FSRS alimentada por recall+Feynman+marcas, repaso en audio al abrir sesión), RF-5.4 (ficha Markdown por documento). Con esta fase queda instalado el ciclo completo del framework: esquema → escuchar → explicar → repasar.
 - **Fase 6 — Niveles de zoom:** RF-2.4 (Recorrido guiado), RF-2.5 (Resumen), RF-2.6 (cambio en caliente), RF-2.3 ("explícame el concepto Y").
 - **Fase 7 — Escucha rica:** RF-1.5–1.6 (tablas/figuras/ecuaciones habladas), RF-4.4 (comandos de voz), RF-3.5 (offline), RF-6.2 (estadísticas).
 

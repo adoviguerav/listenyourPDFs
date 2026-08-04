@@ -34,9 +34,17 @@ Leer un PDF denso (paper, libro técnico, informe, documentación) es lento y fr
 **Un tutor de audio para tus PDFs.** El servidor convierte cualquier PDF en audio limpio
 que escuchas como un podcast desde el móvil; puedes dirigirlo ("léeme la sección 3",
 "explícame este concepto") y preguntarle por voz; con el tiempo, se asegura de que lo
-escuchado se retiene (recall + repaso espaciado).
+escuchado se retiene.
 
-El "10x": tiempo muerto convertido en estudio (2-3x) × priorización dirigida (2x) × retención real (2x sobre escucha pasiva).
+**Visión final: el framework de aprendizaje completo instalado en los cascos**, con las
+técnicas de mayor evidencia científica encadenadas en un ciclo:
+
+1. **Esquema previo** — intro de ~60s por documento (advance organizer): qué vas a escuchar, la idea central y en qué fijarte, para tener el esqueleto mental antes del detalle.
+2. **Escuchar** — el documento real, limpio, dirigible por secciones/conceptos.
+3. **Explicar (Feynman)** — tú le explicas al tutor con tu voz lo que has entendido; él lo compara con el documento y te señala huecos, imprecisiones y lo que te has saltado.
+4. **Repasar y recordar** — recuperación activa (el tutor pregunta) + repaso espaciado (FSRS): lo fallado y lo marcado vuelve en sesiones posteriores hasta quedarse.
+
+El "10x": tiempo muerto convertido en estudio (2-3x) × priorización dirigida (2x) × retención real por el ciclo explicar-repasar (2x sobre escucha pasiva).
 
 ## 4. Decisiones de producto y arquitectura (cerradas con el autor, 2026-08-04)
 
@@ -74,6 +82,8 @@ Prioridad MoSCoW: **M** (must, MVP) / **S** (should, v1) / **C** (could, despué
 - **RF-1.8 (C)** Otras fuentes: EPUB, URL de artículo, arXiv ID.
 
 ### RF-2. Escucha dirigida y niveles de zoom
+- **RF-2.0 (M)** **Intro de ~60s por documento** (esquema mental previo): antes del contenido, el tutor presenta qué vas a escuchar, la idea central y en qué fijarte. Generada desde la estructura extraída; reproducida por defecto al empezar (saltable).
+- **RF-2.0b (M)** **"Anteriormente…" al retomar**: si se vuelve a un documento tras ≥1 día, recap de 20-30s de lo ya escuchado antes de continuar (saltable).
 - **RF-2.1 (M)** Nivel *Completo* ("modo podcast"): el documento entero, limpio, en audio. **Es el primer nivel que se construye.**
 - **RF-2.2 (M)** **Navegación dirigida por el usuario**: "léeme la sección X", "la página N", "sáltate esta sección" — por UI (índice tocable) y, con push-to-talk, por voz.
 - **RF-2.3 (S)** "Explícame el concepto Y": el tutor localiza el concepto en el documento y lo explica anclado al texto.
@@ -97,8 +107,9 @@ Prioridad MoSCoW: **M** (must, MVP) / **S** (should, v1) / **C** (could, despué
 
 ### RF-5. Aprendizaje activo y retención (v1, junto al push-to-talk — D14)
 - **RF-5.1 (S)** Preguntas de recall al cerrar cada sección (1-3), respondidas por voz o texto, con corrección breve.
-- **RF-5.2 (M)** Marcar momentos ("esto es oro" / "no lo entiendo") con un tap; queda guardado con timestamp + párrafo. *(Las marcas sí entran en MVP: son baratas y alimentan todo lo demás.)*
-- **RF-5.3 (S)** Cola de repaso espaciado (FSRS): lo fallado/marcado se reprograma; cada sesión abre con 2-5 min de repaso en audio.
+- **RF-5.2 (M)** Marcar momentos ("esto es oro" / "no lo entiendo") con un tap; queda guardado con timestamp + párrafo. **Diseño para uso a ciegas**: botón enorme en la mitad inferior de la pantalla, accionable con el pulgar sin mirar, con respuesta háptica. *(Las marcas sí entran en MVP: son baratas y alimentan todo lo demás.)*
+- **RF-5.2b (S)** **Modo Feynman**: el usuario explica con su voz un concepto o sección ("te lo explico yo"); el tutor lo compara con el documento y devuelve: qué está bien, qué falta, qué es impreciso. Los huecos detectados alimentan la cola de repaso (RF-5.3).
+- **RF-5.3 (S)** Cola de repaso espaciado (FSRS): lo fallado en recall/Feynman y lo marcado se reprograma; cada sesión abre con 2-5 min de repaso en audio.
 - **RF-5.4 (S)** Ficha final por documento (resumen + marcas + rendimiento) exportable en Markdown.
 - **RF-5.5 (C)** Export a Obsidian/Anki.
 
@@ -126,12 +137,13 @@ Prioridad MoSCoW: **M** (must, MVP) / **S** (should, v1) / **C** (could, despué
 - **RNF-5 Robustez móvil:** la reproducción sobrevive a pantalla bloqueada y cambios de red (D2); la posición se persiste en servidor cada pocos segundos.
 - **RNF-6 Adopción OSS:** otra persona debe poder desplegarlo con sus keys siguiendo solo el README (criterio de éxito nº 2); sin dependencias de servicios propietarios no sustituibles.
 - **RNF-7 Portabilidad de datos:** todo en SQLite + carpetas de archivos (D11); backup = copiar un directorio.
+- **RNF-8 Límite físico de iOS asumido:** con la pantalla bloqueada solo hay reproducción y controles del sistema; grabar con el micrófono (push-to-talk, Feynman) o marcar exige pantalla activa. Es un límite de la plataforma, no del diseño; la UI lo asume (botones grandes accionables sin mirar) y las expectativas se documentan al usuario.
 
 ## 7. Alcance por fases
 
-**MVP ("escuchar bien"):** RF-1.1–1.4, RF-2.1–2.2, RF-3.1–3.4, RF-4.1–4.3, RF-5.2, RF-6.1, RF-7.1–7.6. Push-to-talk y feed RSS incluidos. Un usuario, protección por token único.
+**MVP ("escuchar bien"):** RF-1.1–1.4, RF-2.0–2.2 (intro y recap incluidos), RF-3.1–3.4, RF-4.1–4.3, RF-5.2, RF-6.1, RF-7.1–7.6. Push-to-talk y feed RSS incluidos. Un usuario, protección por token único.
 
-**v1 ("aprender"):** recall por voz (RF-5.1, 5.3, 5.4), niveles guiado/resumen (RF-2.3–2.6), tablas/ecuaciones (RF-1.5–1.6), comandos de voz (RF-4.4), offline (RF-3.5), estadísticas (RF-6.2).
+**v1 ("aprender"):** recall por voz (RF-5.1, 5.3, 5.4), **modo Feynman (RF-5.2b)**, niveles guiado/resumen (RF-2.3–2.6), tablas/ecuaciones (RF-1.5–1.6), comandos de voz (RF-4.4), offline (RF-3.5), estadísticas (RF-6.2).
 
 **v2+:** manos libres realtime, OCR, multiusuario, Capacitor/RSS si hacen falta, export Obsidian/Anki, búsqueda semántica global.
 

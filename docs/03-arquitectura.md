@@ -117,7 +117,9 @@ Post-MVP: Ollama, Kokoro, ElevenLabs, whisper.cpp.
 
 **Escucha (bajo demanda, A6):** cada `position` recibida dispara síntesis de bloques hasta posición+10 min. Salto a sección sin audio → síntesis prioritaria del bloque destino (espera ~5-15s con indicador).
 
-**Push-to-talk:** botón → pausa + graba (MediaRecorder) → `POST /ask` con audio → Whisper → Claude con los bloques relevantes como contexto (por sección actual + búsqueda simple; embeddings solo si hace falta) → respuesta streaming por WS → TTS de la respuesta → suena → reproducción retoma en el bloque exacto. Regla dura RNF-3: responder solo desde el documento, citar sección, "no está en el documento" explícito.
+**Push-to-talk:** botón → pausa + graba (MediaRecorder) → `POST /ask` con audio → Whisper → Claude con los bloques relevantes como contexto (por sección actual + búsqueda simple; embeddings solo si hace falta) → respuesta streaming por WS → TTS de la respuesta → suena → reproducción retoma en el bloque exacto. Regla dura RNF-3: responder solo desde el documento, citar sección, "no está en el documento" explícito. *Límite iOS (RNF-8): grabar exige pantalla activa; con pantalla bloqueada solo hay reproducción.*
+
+**Intro y recap (RF-2.0/2.0b):** la intro de 60s se genera como bloque especial (`section.idx = -1`) al terminar la extracción, con la estructura como input. El recap se genera bajo demanda al retomar (LLM sobre los bloques ya escuchados según `positions`), se cachea como bloque efímero y se reproduce antes de continuar. Ambos saltables desde el reproductor.
 
 **RSS (D16):** `publish-rss` → genera bloques restantes → concatena a `{doc}.mp3` (ffmpeg) → episodio en `feed.xml`. El coste de completar el documento se muestra antes de confirmar.
 
