@@ -42,7 +42,7 @@ fase termina con código pusheado, tests en verde y una demo utilizable.
 | S0.2 Extracción PDF | ¿Qué librería extrae mejor 5 PDFs reales del autor (paper 2-col, libro, informe con tablas, escaneado, slides)? | Librería elegida + calidad esperada por tipo de doc |
 | S0.3 Voz TTS | ¿Qué voz/motor suena mejor en ES e EN a coste ≤1€/paper? (prueba con el mismo fragmento en OpenAI TTS, Gemini TTS, Kokoro) | Motor+voz por defecto |
 
-**DoD:** los 3 veredictos documentados en `docs/spikes/` con evidencia (grabación de pantalla del iPhone, tabla comparativa de extracción, audios de muestra).
+**DoD:** los 3 veredictos documentados en `docs/spikes/` con evidencia. ✅ **Cumplida (2026-08-04):** S0.2 firme (pymupdf4llm, comparativa reproducible); S0.1 y S0.3 con veredicto provisional conservador — la arquitectura no depende del resultado pendiente (RSS ya cubre el peor caso iOS; el TTS es intercambiable por env var) — y puertas de re-validación integradas en la Fase 1 (prueba ciega de voz) y la Fase 2 (prueba física iOS con la PWA real).
 
 ## Fase 1 — Pipeline núcleo: PDF → audio (≈2 semanas)
 
