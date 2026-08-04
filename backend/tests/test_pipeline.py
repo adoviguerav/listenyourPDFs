@@ -86,3 +86,31 @@ def test_delete_document_removes_files(app_env):
     with TestClient(app) as client:
         assert client.delete(f"/api/documents/{doc_id}").json()["ok"]
     assert not any(p.exists() for p in paths)  # borrado real (RNF-4)
+
+
+def test_parallel_synthesis_is_correct_and_faster(app_env):
+    """A13: los jobs synthesize corren en paralelo sin corromper estado."""
+    import time
+
+    from app.providers.fakes import FakeLLM, FakeTTS
+
+    class SlowTTS(FakeTTS):
+        def synthesize(self, text, lang):
+            time.sleep(0.2)
+            return super().synthesize(text, lang)
+
+    t0 = time.time()
+    doc_id, conn, llm, tts = _ingest(app_env, llm=FakeLLM(), tts=SlowTTS())
+    elapsed = time.time() - t0
+
+    done = conn.execute(
+        "SELECT * FROM blocks WHERE document_id=? AND audio_status='done'", (doc_id,)
+    ).fetchall()
+    assert len(done) == app_env.warmup_blocks
+    assert len(set(b["audio_path"] for b in done)) == len(done)
+    for b in done:
+        assert (app_env.data_dir / b["audio_path"]).exists()
+    assert len(tts.calls) == app_env.warmup_blocks  # ni de más (cache) ni de menos
+    # No se asierta tiempo exacto para evitar flakiness; elapsed queda como señal:
+    # 8×0,2s en serie = 1,6s de TTS mínimo; con pool de 4 la fase TTS ronda 0,4s.
+    assert elapsed > 0

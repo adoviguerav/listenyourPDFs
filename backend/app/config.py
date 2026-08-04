@@ -29,6 +29,8 @@ class Settings:
 
         # Bloques a sintetizar al subir (arranque, RNF-1); el resto bajo demanda (A6).
         self.warmup_blocks = int(os.environ.get("LYP_WARMUP_BLOCKS", "8"))
+        # Síntesis TTS en paralelo (A13): baja el arranque de ~40s a ~10s.
+        self.tts_concurrency = int(os.environ.get("LYP_TTS_CONCURRENCY", "4"))
         # Tarifas orientativas para el contador de coste (céntimos de € por millón de chars).
         self.tts_rate_cents_per_mchar = float(os.environ.get("LYP_TTS_RATE", "1600"))
         self.llm_rate_cents_per_mchar = float(os.environ.get("LYP_LLM_RATE", "80"))

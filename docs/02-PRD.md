@@ -83,6 +83,7 @@ fase termina con código pusheado, tests en verde y una demo utilizable.
 
 **DoD:**
 - 20 preguntas de prueba sobre un paper: ≥18 respondidas correctamente con cita, 0 respuestas inventadas (las 2 restantes deben ser "no está en el documento" o rechazo correcto).
+- **Latencia (L3, arquitectura §7): la primera voz del tutor suena en <5s típicos y <10s p95** desde que sueltas el botón — medido sobre las 20 preguntas de prueba. Diseño obligatorio: Claude en streaming + TTS pipelined por frases; nunca esperar la respuesta completa.
 - La reproducción retoma exactamente donde se pausó tras cada interacción.
 - Tests: contrato STT mockeado, evaluación automatizada de anclaje (respuestas contienen referencia válida a sección existente), E2E del ciclo completo.
 

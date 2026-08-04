@@ -18,7 +18,8 @@
 | A9 | TTS por defecto | **Gemini Flash TTS** — veredicto S0.3: mejor calidad/precio (top-3 Arena a precio de gama baja) | OpenAI, Kokoro (local), ElevenLabs y Qwen como alternativas de la interfaz. BYOK mínimo: Anthropic + Google |
 | A10 | Persistencia | **SQLite (WAL) + sistema de archivos** (`data/pdfs/`, `data/audio/`, `data/db.sqlite`) | Backup = copiar `data/`. sqlite-vec solo si el Q&A lo necesita |
 | A11 | Despliegue | **Docker Compose** (backend+worker+frontend) en **VPS con Coolify** | HTTPS automático. El dominio del autor: **pendiente de decisión** (subdominio propio / compra / sslip.io) |
-| A12 | Extracción PDF | Candidatas: **docling, pymupdf4llm, marker** — se fija en el spike S0.2 con 5 PDFs reales | Detrás de una interfaz `Extractor` para poder cambiarla |
+| A12 | Extracción PDF | **pymupdf4llm** (veredicto S0.2) | Detrás de una interfaz `Extractor`; docling como 2ª integración en v1 |
+| A13 | Síntesis en paralelo | **Pool de hilos en el worker** (`LYP_TTS_CONCURRENCY`, defecto 4) para jobs `synthesize` | Arranque de un documento: de ~40s a ~10s. Implementado en F1 |
 
 ## 2. Componentes
 
@@ -123,7 +124,29 @@ Post-MVP: OpenAI (TTS/Whisper), Kokoro, ElevenLabs, Qwen, Ollama, whisper.cpp, d
 
 **RSS (D16):** `publish-rss` → genera bloques restantes → concatena a `{doc}.mp3` (ffmpeg) → episodio en `feed.xml`. El coste de completar el documento se muestra antes de confirmar.
 
-## 7. Estructura del repo
+## 7. Presupuestos de latencia
+
+Tres momentos distintos, cada uno con su estrategia:
+
+**L1 — De subir a darle play (RNF-1: <60s; objetivo real ~10-15s).**
+Bloques de ~45s; al subir solo se sintetiza el arranque (8 bloques) con prioridad 1 y
+**en paralelo** (A13). El play está disponible con el primer bloque.
+
+**L2 — Durante la escucha (latencia percibida: 0).**
+Cada guardado de posición dispara el colchón de ~8 bloques por delante; la cache por hash
+hace gratis re-escuchas y retrocesos. Caso asumido: salto a sección fría = 5-15s con
+indicador (precio del bajo demanda puro, A6); mitigación futura: botón "generar todo".
+
+**L3 — Push-to-talk (Fase 3; primera voz del tutor <5s típicos, <10s p95 — en DoD).**
+Presupuesto del ciclo: subida de voz comprimida (webm/opus mono, ~0,3s) → STT Gemini en
+petición única (~1-1,5s; streaming STT no compensa en clips de 10s) → **Claude en
+streaming** (primeras frases en ~1-2s) → **TTS pipelined por frases**: la frase 1 se
+sintetiza y suena mientras el LLM sigue escribiendo; cada frase llega al cliente por
+WebSocket (A4) según está lista. Regla de diseño obligatoria del tutor: **nunca esperar
+todo para empezar nada**. Clientes HTTP persistentes hacia todas las APIs. Las APIs
+realtime full-duplex (~1s total) quedan para el manos-libres de v2 por coste/complejidad.
+
+## 8. Estructura del repo
 
 ```
 backend/    app/ (api/, worker/, providers/, pipeline/, models/), tests/, pyproject.toml
@@ -132,7 +155,7 @@ deploy/     docker-compose.yml, .env.example, README-selfhost.md
 docs/       01..03, spikes/
 ```
 
-## 8. Pendiente (no bloquea el arranque)
+## 9. Pendiente (no bloquea el arranque)
 
 - **Dominio del autor** (A11): decidir antes del despliegue en VPS (Fase 4); el desarrollo local y los spikes no lo necesitan.
 - Voz/motor TTS definitivo (S0.3) y extractor PDF (S0.2): los deciden los spikes de la Fase 0.
