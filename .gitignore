@@ -224,3 +224,6 @@ frontend/.next/
 frontend/next-env.d.ts
 frontend/test-results/
 frontend/playwright-report/
+
+# La regla 'lib/' de la plantilla Python NO debe tragarse el código del frontend
+!frontend/lib/
