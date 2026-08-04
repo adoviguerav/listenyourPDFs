@@ -83,9 +83,9 @@ Prioridad MoSCoW: **M** (must, MVP) / **S** (should, v1) / **C** (could, despué
 
 ### RF-2. Escucha dirigida y niveles de zoom
 - **RF-2.0 (M)** **Intro de ~60s por documento** (esquema mental previo): antes del contenido, el tutor presenta qué vas a escuchar, la idea central y en qué fijarte. Generada desde la estructura extraída; reproducida por defecto al empezar (saltable).
-- **RF-2.0b (M)** **"Anteriormente…" al retomar**: si se vuelve a un documento tras ≥1 día, recap de 20-30s de lo ya escuchado antes de continuar (saltable).
-- **RF-2.1 (M)** Nivel *Completo* ("modo podcast"): el documento entero, limpio, en audio. **Es el primer nivel que se construye.**
-- **RF-2.2 (M)** **Navegación dirigida por el usuario**: "léeme la sección X", "la página N", "sáltate esta sección" — por UI (índice tocable) y, con push-to-talk, por voz.
+- **RF-2.0b (S)** **"Anteriormente…" al retomar**: si se vuelve a un documento tras ≥1 día, recap de 20-30s de lo ya escuchado antes de continuar (saltable).
+- **RF-2.1 (M)** Nivel *Completo* ("modo podcast"): el documento entero, limpio, en audio. **Es el primer nivel que se construye.** En MVP la escucha es lineal (saltos ±15s y por bloque, sin índice).
+- **RF-2.2 (S)** **Navegación dirigida por el usuario**: "léeme la sección X", "la página N", "sáltate esta sección" — por UI (índice tocable) y, con push-to-talk, por voz.
 - **RF-2.3 (S)** "Explícame el concepto Y": el tutor localiza el concepto en el documento y lo explica anclado al texto.
 - **RF-2.4 (S)** Nivel *Recorrido guiado*: versión por sección estilo "profesor explicando el documento" (~20 min).
 - **RF-2.5 (S)** Nivel *Resumen* (~5 min) para triaje.
@@ -95,19 +95,19 @@ Prioridad MoSCoW: **M** (must, MVP) / **S** (should, v1) / **C** (could, despué
 - **RF-3.1 (M)** Play/pausa, velocidad 0.75x–3x, saltar ±15s, saltar por sección.
 - **RF-3.2 (M)** TTS natural, español e inglés como mínimo; el audio se genera en el idioma original del documento (D9).
 - **RF-3.3 (M)** Audio en background con pantalla bloqueada + controles del sistema (Media Session API). **Prueba de fuego en iPhone la semana 1** (D4); si falla: Capacitor, y como parche inmediato el feed RSS (D16).
-- **RF-3.4 (M)** Sincronización audio↔texto: al escuchar se resalta el párrafo actual; la posición se guarda.
+- **RF-3.4 (M)** La posición de escucha se guarda y se retoma en cualquier dispositivo. **(S)** Sincronización visual audio↔texto: ver el texto con el párrafo actual resaltado.
 - **RF-3.5 (S)** Descarga offline del audio generado.
 
 ### RF-4. Interacción con el tutor
 - **RF-4.1 (M)** **Push-to-talk**: botón (pantalla) → el audio se pausa → hablas → STT (Whisper o equivalente) → el tutor responde en audio → retoma donde iba.
-- **RF-4.2 (M)** Q&A por texto con la misma lógica.
+- **RF-4.2 (S)** Q&A por texto con la misma lógica.
 - **RF-4.3 (M)** Respuestas ancladas al documento, con referencia a la sección; "no está en el documento" explícito — nunca inventar.
 - **RF-4.4 (S)** Comandos de navegación por voz: "salta a resultados", "repite eso", "más despacio", "resume este capítulo".
 - **RF-4.5 (C)** Conversación manos libres continua (API realtime); modo socrático/debate.
 
 ### RF-5. Aprendizaje activo y retención (v1, junto al push-to-talk — D14)
 - **RF-5.1 (S)** Preguntas de recall al cerrar cada sección (1-3), respondidas por voz o texto, con corrección breve.
-- **RF-5.2 (M)** Marcar momentos ("esto es oro" / "no lo entiendo") con un tap; queda guardado con timestamp + párrafo. **Diseño para uso a ciegas**: botón enorme en la mitad inferior de la pantalla, accionable con el pulgar sin mirar, con respuesta háptica. *(Las marcas sí entran en MVP: son baratas y alimentan todo lo demás.)*
+- **RF-5.2 (S)** Marcar momentos ("esto es oro" / "no lo entiendo") con un tap; queda guardado con timestamp + párrafo. **Diseño para uso a ciegas**: botón enorme en la mitad inferior de la pantalla, accionable con el pulgar sin mirar, con respuesta háptica.
 - **RF-5.2b (S)** **Modo Feynman**: el usuario explica con su voz un concepto o sección ("te lo explico yo"); el tutor lo compara con el documento y devuelve: qué está bien, qué falta, qué es impreciso. Los huecos detectados alimentan la cola de repaso (RF-5.3).
 - **RF-5.3 (S)** Cola de repaso espaciado (FSRS): lo fallado en recall/Feynman y lo marcado se reprograma; cada sesión abre con 2-5 min de repaso en audio.
 - **RF-5.4 (S)** Ficha final por documento (resumen + marcas + rendimiento) exportable en Markdown.
@@ -117,6 +117,7 @@ Prioridad MoSCoW: **M** (must, MVP) / **S** (should, v1) / **C** (could, despué
 - **RF-6.1 (M)** Biblioteca con estado (sin empezar / en curso con % / terminado) y posición guardada, accesible desde móvil y PC.
 - **RF-6.2 (S)** Estadísticas: tiempo escuchado, % acierto en recall, cola de repaso.
 - **RF-6.3 (C)** Colecciones y búsqueda semántica en toda la biblioteca.
+- **RF-6.4 (M)** Contador de coste visible: gasto en APIs por documento y por mes, en la UI (materializa RNF-2).
 
 ### RF-7. Plataforma y self-hosting
 - **RF-7.1 (M)** PWA responsive instalable; caso de uso principal móvil + auriculares (D2-D4).
@@ -141,9 +142,14 @@ Prioridad MoSCoW: **M** (must, MVP) / **S** (should, v1) / **C** (could, despué
 
 ## 7. Alcance por fases
 
-**MVP ("escuchar bien"):** RF-1.1–1.4, RF-2.0–2.2 (intro y recap incluidos), RF-3.1–3.4, RF-4.1–4.3, RF-5.2, RF-6.1, RF-7.1–7.6. Push-to-talk y feed RSS incluidos. Un usuario, protección por token único.
+**MVP (corte elegido por el autor, 2026-08-04 — "lo mínimo para usarla a diario"):**
+- Núcleo: subir PDF → limpieza adaptativa → audio por bloques (RF-1.1–1.4), escucha lineal del documento completo (RF-2.1), intro de 60s (RF-2.0).
+- Reproductor: controles y velocidad (RF-3.1), background/lock screen (RF-3.3), posición persistida (RF-3.4-M), TTS idioma original (RF-3.2).
+- Tutor: push-to-talk por voz (RF-4.1, RF-4.3). *(Q&A por texto queda en v1.)*
+- Biblioteca con progreso (RF-6.1) y contador de coste (RF-6.4).
+- Plataforma: PWA (RF-7.1), BYOK (RF-7.2), Docker un comando (RF-7.3), proveedores intercambiables (RF-7.4), QR de instalación (RF-7.5), feed RSS (RF-7.6), token único.
 
-**v1 ("aprender"):** recall por voz (RF-5.1, 5.3, 5.4), **modo Feynman (RF-5.2b)**, niveles guiado/resumen (RF-2.3–2.6), tablas/ecuaciones (RF-1.5–1.6), comandos de voz (RF-4.4), offline (RF-3.5), estadísticas (RF-6.2).
+**v1 ("aprender y navegar"):** Q&A texto (RF-4.2), recap al retomar (RF-2.0b), marcas (RF-5.2), índice saltable y navegación dirigida (RF-2.2), texto sincronizado (RF-3.4-S), recall por voz (RF-5.1, 5.3, 5.4), **modo Feynman (RF-5.2b)**, niveles guiado/resumen (RF-2.3–2.6), tablas/ecuaciones (RF-1.5–1.6), comandos de voz (RF-4.4), offline (RF-3.5), estadísticas (RF-6.2).
 
 **v2+:** manos libres realtime, OCR, multiusuario, Capacitor/RSS si hacen falta, export Obsidian/Anki, búsqueda semántica global.
 

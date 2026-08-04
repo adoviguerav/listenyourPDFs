@@ -62,21 +62,22 @@ fase termina con código pusheado, tests en verde y una demo utilizable.
 
 **Objetivo:** escuchar de verdad desde el iPhone andando. El "modo podcast" completo.
 
-**Alcance (RF):** RF-3.1 (controles, velocidad, saltos), RF-3.3 (background + Media Session; aplicar veredicto S0.1), RF-3.4 (sync audio↔texto, posición persistida), RF-2.0b (recap "anteriormente…" al retomar tras ≥1 día), RF-2.2 (navegación dirigida por índice tocable), RF-5.2 (marcas con botón diseñado para uso a ciegas: grande, pulgar, háptica), RF-6.1 (biblioteca con progreso), RF-7.1 (PWA instalable), RF-7.5 (QR onboarding), RF-7.6 (feed RSS privado: botón "enviar a podcast" por documento → genera el audio restante, concatena y publica episodio).
+**Alcance (RF):** RF-3.1 (controles, velocidad, saltos ±15s/bloque — escucha lineal, sin índice), RF-3.3 (background + Media Session; aplicar veredicto S0.1), RF-3.4-M (posición persistida y retomable), RF-6.1 (biblioteca con progreso), RF-6.4 (contador de coste visible), RF-7.1 (PWA instalable), RF-7.5 (QR onboarding), RF-7.6 (feed RSS privado: botón "enviar a podcast" por documento → genera el audio restante, concatena y publica episodio).
 
 **Entregable:** PWA instalada en el iPhone del autor; sube un PDF desde el móvil, y lo escucha entero con pantalla bloqueada.
 
 **DoD:**
-- El autor completa un paseo de 30 min escuchando un paper sin tocar el móvil salvo para marcar.
+- El autor completa un paseo de 30 min escuchando un paper sin tocar el móvil.
 - La posición sobrevive a: bloquear pantalla, perder red, cerrar y reabrir la app.
 - Un documento enviado a podcast aparece como episodio en Apple Podcasts del autor y se reproduce entero con pantalla bloqueada.
+- El contador de coste refleja el gasto real por documento y mes.
 - Tests: componentes del reproductor, E2E (Playwright) del flujo subir→procesar→escuchar→retomar, validación del XML del feed RSS, Lighthouse PWA installable.
 
 ## Fase 3 — Tutor push-to-talk (≈2 semanas)
 
 **Objetivo:** el diferencial. Preguntar hablando y ser respondido con fidelidad al documento.
 
-**Alcance (RF):** RF-4.1 (push-to-talk: pausa→STT→respuesta en audio→retoma), RF-4.2 (Q&A texto), RF-4.3 (respuestas ancladas con cita de sección, "no está en el documento"), RNF-3 (anti-alucinación).
+**Alcance (RF):** RF-4.1 (push-to-talk: pausa→STT→respuesta en audio→retoma), RF-4.3 (respuestas ancladas con cita de sección, "no está en el documento"), RNF-3 (anti-alucinación). *(Q&A por texto: v1.)*
 
 **Entregable:** durante la escucha, botón grande de hablar; pregunta por voz respondida en <10s con referencia a la sección.
 
@@ -100,11 +101,12 @@ fase termina con código pusheado, tests en verde y una demo utilizable.
 
 ---
 
-## v1 — "Aprender" (post-MVP, fases 5-7 orientativas)
+## v1 — "Aprender y navegar" (post-MVP, fases 5-8 orientativas)
 
-- **Fase 5 — Recall, Feynman y repaso:** RF-5.1 (preguntas por sección vía push-to-talk), RF-5.2b (modo Feynman: explicas tú por voz y el tutor señala huecos contra el documento), RF-5.3 (cola FSRS alimentada por recall+Feynman+marcas, repaso en audio al abrir sesión), RF-5.4 (ficha Markdown por documento). Con esta fase queda instalado el ciclo completo del framework: esquema → escuchar → explicar → repasar.
-- **Fase 6 — Niveles de zoom:** RF-2.4 (Recorrido guiado), RF-2.5 (Resumen), RF-2.6 (cambio en caliente), RF-2.3 ("explícame el concepto Y").
-- **Fase 7 — Escucha rica:** RF-1.5–1.6 (tablas/figuras/ecuaciones habladas), RF-4.4 (comandos de voz), RF-3.5 (offline), RF-6.2 (estadísticas).
+- **Fase 5 — Pantalla y navegación:** RF-4.2 (Q&A por texto), RF-2.2 (índice de secciones saltable), RF-3.4-S (texto sincronizado resaltado), RF-5.2 (marcas con botón a ciegas), RF-2.0b (recap al retomar).
+- **Fase 6 — Recall, Feynman y repaso:** RF-5.1 (preguntas por sección vía push-to-talk), RF-5.2b (modo Feynman: explicas tú por voz y el tutor señala huecos contra el documento), RF-5.3 (cola FSRS alimentada por recall+Feynman+marcas, repaso en audio al abrir sesión), RF-5.4 (ficha Markdown por documento). Con esta fase queda instalado el ciclo completo del framework: esquema → escuchar → explicar → repasar.
+- **Fase 7 — Niveles de zoom:** RF-2.4 (Recorrido guiado), RF-2.5 (Resumen), RF-2.6 (cambio en caliente), RF-2.3 ("explícame el concepto Y").
+- **Fase 8 — Escucha rica:** RF-1.5–1.6 (tablas/figuras/ecuaciones habladas), RF-4.4 (comandos de voz), RF-3.5 (offline), RF-6.2 (estadísticas).
 
 ## v2+ (backlog)
 
