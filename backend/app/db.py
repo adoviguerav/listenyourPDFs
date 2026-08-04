@@ -12,7 +12,9 @@ CREATE TABLE IF NOT EXISTS documents (
   status TEXT NOT NULL DEFAULT 'uploaded',
   error TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  total_cost_cents REAL NOT NULL DEFAULT 0
+  total_cost_cents REAL NOT NULL DEFAULT 0,
+  rss_published_at TEXT,
+  full_mp3_path TEXT
 );
 CREATE TABLE IF NOT EXISTS sections (
   id INTEGER PRIMARY KEY,
@@ -66,11 +68,21 @@ _local = threading.local()
 _db_path: Path | None = None
 
 
+MIGRATIONS = [
+    ("documents", "rss_published_at", "ALTER TABLE documents ADD COLUMN rss_published_at TEXT"),
+    ("documents", "full_mp3_path", "ALTER TABLE documents ADD COLUMN full_mp3_path TEXT"),
+]
+
+
 def init(path: Path) -> None:
     global _db_path
     _db_path = path
     conn = connect()
     conn.executescript(SCHEMA)
+    for table, column, ddl in MIGRATIONS:
+        cols = {r["name"] for r in conn.execute(f"PRAGMA table_info({table})").fetchall()}
+        if column not in cols:
+            conn.execute(ddl)
     conn.commit()
 
 

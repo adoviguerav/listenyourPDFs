@@ -5,8 +5,9 @@ import secrets
 
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi import (Depends, FastAPI, HTTPException, Request, UploadFile,
+                     WebSocket, WebSocketDisconnect)
+from fastapi.responses import FileResponse, JSONResponse, Response
 
 from .. import db
 from ..config import settings
@@ -149,6 +150,97 @@ def delete_document(doc_id: int):
     (settings.data_dir / "pdfs" / doc["filename"]).unlink(missing_ok=True)
     conn.execute("DELETE FROM documents WHERE id=?", (doc_id,))
     return {"ok": True}
+
+
+@app.post("/api/documents/{doc_id}/publish-rss", dependencies=[Depends(auth)], status_code=202)
+def publish_rss(doc_id: int):
+    conn = db.connect()
+    doc = conn.execute("SELECT * FROM documents WHERE id=?", (doc_id,)).fetchone()
+    if doc is None:
+        raise HTTPException(404, "documento no encontrado")
+    if doc["status"] != "ready":
+        raise HTTPException(409, f"documento en estado {doc['status']}")
+    from ..pipeline.rss import publish_document
+    publish_document(doc_id)
+    remaining = conn.execute(
+        "SELECT COUNT(*) c FROM blocks WHERE document_id=? AND audio_status='pending'",
+        (doc_id,),
+    ).fetchone()["c"]
+    return {"queued": True, "blocks_remaining": remaining}
+
+
+@app.get("/feed.xml")
+def rss_feed(request: Request):
+    _check_media_token(request)
+    from ..pipeline.rss import feed_xml
+    xml = feed_xml(settings.public_url, settings.auth_token or "")
+    return Response(content=xml, media_type="application/rss+xml")
+
+
+@app.get("/audio/{doc_id}.mp3")
+def full_audio(doc_id: int, request: Request):
+    _check_media_token(request)
+    conn = db.connect()
+    doc = conn.execute("SELECT full_mp3_path FROM documents WHERE id=?", (doc_id,)).fetchone()
+    if doc is None or not doc["full_mp3_path"]:
+        raise HTTPException(404, "episodio no publicado")
+    return FileResponse(settings.data_dir / doc["full_mp3_path"], media_type="audio/mpeg")
+
+
+def _check_media_token(request: Request) -> None:
+    """El feed y sus MP3 se autentican solo por token en query (las apps de podcast
+    no mandan cabeceras)."""
+    if not settings.auth_token:
+        return
+    if not secrets.compare_digest(request.query_params.get("token", ""), settings.auth_token):
+        raise HTTPException(401, "token inválido")
+
+
+@app.get("/api/qr", dependencies=[Depends(auth)])
+def qr_svg():
+    import segno
+    q = segno.make(settings.public_url, error="m")
+    return Response(content=q.svg_inline(scale=6), media_type="image/svg+xml")
+
+
+@app.websocket("/ws")
+async def ws_events(ws: WebSocket):
+    """Eventos servidor→cliente (A4): block.ready y estado del documento suscrito.
+
+    El worker es otro proceso; el estado compartido es SQLite, así que este
+    endpoint observa la BD (~1s) y empuja los cambios por el socket.
+    """
+    import asyncio
+
+    if settings.auth_token and not secrets.compare_digest(
+        ws.query_params.get("token", ""), settings.auth_token
+    ):
+        await ws.close(code=4401)
+        return
+    await ws.accept()
+    doc_id = int(ws.query_params.get("doc", "0"))
+    known_ready: set[int] = set()
+    last_status = None
+    try:
+        while True:
+            conn = db.connect()
+            doc = conn.execute(
+                "SELECT status FROM documents WHERE id=?", (doc_id,)).fetchone()
+            if doc and doc["status"] != last_status:
+                last_status = doc["status"]
+                await ws.send_json({"type": "doc.status", "document_id": doc_id,
+                                    "status": last_status})
+            rows = conn.execute(
+                "SELECT id FROM blocks WHERE document_id=? AND audio_status='done'",
+                (doc_id,)).fetchall()
+            for r in rows:
+                if r["id"] not in known_ready:
+                    known_ready.add(r["id"])
+                    await ws.send_json({"type": "block.ready", "document_id": doc_id,
+                                        "block_id": r["id"]})
+            await asyncio.sleep(1)
+    except WebSocketDisconnect:
+        pass
 
 
 @app.get("/api/costs", dependencies=[Depends(auth)])

@@ -15,6 +15,8 @@ class Settings:
         self.data_dir = _data_dir()
         self.db_path = self.data_dir / "db.sqlite"
         self.auth_token = os.environ.get("LYP_TOKEN", "")
+        # URL pública de la instancia (QR y URLs del feed RSS), ej. https://pdfs.midominio.com
+        self.public_url = os.environ.get("LYP_PUBLIC_URL", "http://localhost:8000").rstrip("/")
 
         self.llm_provider = os.environ.get("LLM_PROVIDER", "claude")
         self.tts_provider = os.environ.get("TTS_PROVIDER", "gemini")

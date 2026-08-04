@@ -36,6 +36,9 @@ def run_job(job: dict, llm=None, tts=None) -> None:
         process.process_document(payload["document_id"], llm)
     elif job["type"] == "synthesize":
         process.synthesize_block(payload["block_id"], tts)
+    elif job["type"] == "concat_rss":
+        from .pipeline import rss
+        rss.concat_rss(payload["document_id"])
     else:
         raise ValueError(f"tipo de job desconocido: {job['type']}")
 
@@ -69,21 +72,22 @@ def run_pending(llm=None, tts=None, max_jobs: int = 1000, concurrency: int | Non
     n = 0
     with ThreadPoolExecutor(max_workers=concurrency) as pool:
         while n < max_jobs:
-            batch: list[dict] = []
-            while len(batch) < concurrency and n + len(batch) < max_jobs:
+            batch: list[dict] = []   # synthesize → paralelo
+            others: list[dict] = []  # el resto → en línea, DESPUÉS del lote (p.ej.
+            #   concat_rss debe ver la síntesis de su vuelta ya terminada)
+            while len(batch) < concurrency and n + len(batch) + len(others) < max_jobs:
                 job = claim_next()
                 if job is None:
                     break
-                if job["type"] == "synthesize":
-                    batch.append(job)
-                else:
-                    _execute(job, llm, tts)
-                    n += 1
-            if not batch:
-                break  # cola drenada (o max_jobs alcanzado) sin sintetizables pendientes
+                (batch if job["type"] == "synthesize" else others).append(job)
+            if not batch and not others:
+                break  # cola drenada (o max_jobs alcanzado)
             for f in [pool.submit(_execute, j, llm, tts) for j in batch]:
                 f.result()
             n += len(batch)
+            for j in others:
+                _execute(j, llm, tts)
+                n += 1
     return n
 
 
