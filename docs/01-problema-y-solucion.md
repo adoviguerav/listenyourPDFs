@@ -55,7 +55,7 @@ El "10x": tiempo muerto convertido en estudio (2-3x) × priorización dirigida (
 | D3 | Dispositivo del autor | **iPhone**, pero debe funcionar para todo el mundo | Chrome en iOS usa WebKit: mismas restricciones que Safari |
 | D4 | Plataforma | **PWA universal primero; wrapper Capacitor para iOS solo si el audio en background falla** | Máxima adopción OSS, riesgo controlado |
 | D5 | Interacción | **Voz push-to-talk en MVP**: botón → pausa → hablas (STT) → responde en audio → retoma. Q&A por texto incluido. Manos libres continuo: v2 | Cubre el 90% del valor en movimiento con coste contenido |
-| D6 | TTS por defecto | **OpenAI o Gemini TTS** (~1€/paper). Kokoro local como 2ª integración (self-host 0€). ElevenLabs como opción premium BYOK | Equilibrio calidad/precio; arquitectura multi-proveedor |
+| D6 | TTS por defecto | **Gemini Flash TTS** (revisado 2026-08-04, spike S0.3: top-3 en calidad a precio de gama baja, ~0,5-1,8€/paper). STT también Gemini (una key Google para toda la voz). Kokoro local como integración self-host 0€; OpenAI/ElevenLabs/Qwen como alternativas BYOK | Criterio del autor: el mejor calidad/precio absoluto, sin lealtad a proveedor |
 | D7 | LLM por defecto | **Claude** (fidelidad al documento, español). Multi-proveedor desde el día 1 (OpenAI, Gemini, Ollama) | Anti-alucinación es requisito duro |
 | D8 | Primer nivel de escucha | **Completo limpio ("modo podcast")**: el documento entero, bien leído. Recorrido guiado y Resumen después | El autor quiere usarlo como un podcast primero |
 | D9 | Idioma | **Siempre idioma original del documento** (sin traducción en pipeline). El tutor responde en el idioma del usuario | Fidelidad y simplicidad |

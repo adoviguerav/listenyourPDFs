@@ -13,9 +13,9 @@
 | A4 | Tiempo real | **WebSockets** (progreso de generación + streaming de respuestas del tutor) | Elección del autor, prepara el manos-libres de v2. Reconexión automática en el cliente; los WS deben configurarse en el proxy (Coolify lo soporta) |
 | A5 | Seguridad de instancia | **Token único** definido en `.env`; login de un campo, cookie persistente | El feed RSS lleva su propio token en la URL. Multiusuario queda fuera (RF-7.7 C) |
 | A6 | Estrategia de generación | **Bajo demanda puro**: al subir se genera solo el arranque; durante la escucha el worker va ~10 min por delante de la posición | Excepción: "enviar a podcast" (RSS) genera el documento completo y concatena — es la única vía de pre-generación total |
-| A7 | STT por defecto | **Whisper API (OpenAI)** | Robusto con ruido de calle; coste despreciable; intercambiable (RF-7.4) |
+| A7 | STT por defecto | **Gemini (audio nativo)** — revisado con S0.3: una key de Google cubre TTS+STT | Whisper API como alternativa tras la interfaz; validar robustez con ruido de calle en Fase 3 |
 | A8 | LLM por defecto | **Claude** (D7) | Limpieza con modelo mediano (Haiku), Q&A/tutor con modelo grande |
-| A9 | TTS por defecto | **OpenAI o Gemini TTS** — se fija en el spike S0.3 con prueba ciega | Kokoro (local) y ElevenLabs como alternativas de la interfaz |
+| A9 | TTS por defecto | **Gemini Flash TTS** — veredicto S0.3: mejor calidad/precio (top-3 Arena a precio de gama baja) | OpenAI, Kokoro (local), ElevenLabs y Qwen como alternativas de la interfaz. BYOK mínimo: Anthropic + Google |
 | A10 | Persistencia | **SQLite (WAL) + sistema de archivos** (`data/pdfs/`, `data/audio/`, `data/db.sqlite`) | Backup = copiar `data/`. sqlite-vec solo si el Q&A lo necesita |
 | A11 | Despliegue | **Docker Compose** (backend+worker+frontend) en **VPS con Coolify** | HTTPS automático. El dominio del autor: **pendiente de decisión** (subdominio propio / compra / sslip.io) |
 | A12 | Extracción PDF | Candidatas: **docling, pymupdf4llm, marker** — se fija en el spike S0.2 con 5 PDFs reales | Detrás de una interfaz `Extractor` para poder cambiarla |
@@ -107,9 +107,9 @@ class STTProvider(Protocol):
 class Extractor(Protocol):
     def extract(pdf_path) -> DocStructure                        # secciones + bloques + metadatos
 ```
-Selección por variables de entorno (`LLM_PROVIDER=claude`, `TTS_PROVIDER=openai`, …).
-Implementaciones MVP: Claude · OpenAI-TTS y/o Gemini-TTS (según S0.3) · Whisper API · extractor según S0.2.
-Post-MVP: Ollama, Kokoro, ElevenLabs, whisper.cpp.
+Selección por variables de entorno (`LLM_PROVIDER=claude`, `TTS_PROVIDER=gemini`, …).
+Implementaciones MVP: Claude · Gemini TTS · Gemini STT · pymupdf4llm (S0.2).
+Post-MVP: OpenAI (TTS/Whisper), Kokoro, ElevenLabs, Qwen, Ollama, whisper.cpp, docling.
 
 ## 6. Flujos clave
 
@@ -117,7 +117,7 @@ Post-MVP: Ollama, Kokoro, ElevenLabs, whisper.cpp.
 
 **Escucha (bajo demanda, A6):** cada `position` recibida dispara síntesis de bloques hasta posición+10 min. Salto a sección sin audio → síntesis prioritaria del bloque destino (espera ~5-15s con indicador).
 
-**Push-to-talk:** botón → pausa + graba (MediaRecorder) → `POST /ask` con audio → Whisper → Claude con los bloques relevantes como contexto (por sección actual + búsqueda simple; embeddings solo si hace falta) → respuesta streaming por WS → TTS de la respuesta → suena → reproducción retoma en el bloque exacto. Regla dura RNF-3: responder solo desde el documento, citar sección, "no está en el documento" explícito. *Límite iOS (RNF-8): grabar exige pantalla activa; con pantalla bloqueada solo hay reproducción.*
+**Push-to-talk:** botón → pausa + graba (MediaRecorder) → `POST /ask` con audio → STT (Gemini) → Claude con los bloques relevantes como contexto (por sección actual + búsqueda simple; embeddings solo si hace falta) → respuesta streaming por WS → TTS de la respuesta → suena → reproducción retoma en el bloque exacto. Regla dura RNF-3: responder solo desde el documento, citar sección, "no está en el documento" explícito. *Límite iOS (RNF-8): grabar exige pantalla activa; con pantalla bloqueada solo hay reproducción.*
 
 **Intro y recap (RF-2.0/2.0b):** la intro de 60s se genera como bloque especial (`section.idx = -1`) al terminar la extracción, con la estructura como input. El recap se genera bajo demanda al retomar (LLM sobre los bloques ya escuchados según `positions`), se cachea como bloque efímero y se reproduce antes de continuar. Ambos saltables desde el reproductor.
 
