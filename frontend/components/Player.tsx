@@ -4,6 +4,7 @@
 // RNF-8/S0.1: la reanudación tras background se trata como NO fiable — al volver a
 // foreground se rearma el <audio> y la Media Session desde el estado guardado.
 import { useCallback, useEffect, useRef, useState } from "react";
+import PdfViewer from "@/components/PdfViewer";
 import { api, Block, DocDetail, mediaUrl, wsUrl } from "@/lib/api";
 
 const fmt = (ms: number) => {
@@ -29,6 +30,28 @@ export default function Player({ doc: initial }: { doc: DocDetail }) {
 
   const block: Block | undefined = doc.playlist[idx];
   const section = doc.sections.find((s) => s.id === block?.section_id);
+
+  // Visor PDF-primero: la página sigue al audio salvo que el usuario navegue a mano.
+  const [viewPage, setViewPage] = useState(doc.playlist[Math.max(0, startIdx)]?.page ?? 1);
+  const [numPages, setNumPages] = useState(0);
+  const [follow, setFollow] = useState(true);
+  const [showText, setShowText] = useState(false);
+
+  useEffect(() => {
+    if (follow && block?.page) setViewPage(block.page);
+  }, [follow, block?.page]);
+
+  const goPage = (delta: number) => {
+    setFollow(false);
+    setViewPage((p) => Math.min(Math.max(1, p + delta), numPages || p + delta));
+  };
+
+  const readFromPage = () => {
+    const d = docRef.current;
+    const i = d.playlist.findIndex((b) => b.page >= viewPage);
+    setFollow(true);
+    if (i >= 0) play(i);
+  };
 
   const savePosition = useCallback(async () => {
     const a = audioRef.current;
@@ -142,8 +165,38 @@ export default function Player({ doc: initial }: { doc: DocDetail }) {
   return (
     <div>
       <div className="card">
+        <PdfViewer
+          url={mediaUrl(`/api/documents/${doc.id}/pdf`)}
+          page={viewPage}
+          onNumPages={setNumPages}
+        />
+        <div className="row" style={{ justifyContent: "space-between", marginTop: "0.6rem" }}>
+          <button className="btn" onClick={() => goPage(-1)} aria-label="página anterior">‹</button>
+          <span className="chip" data-testid="page-pos">
+            pág. {viewPage}{numPages ? ` / ${numPages}` : ""}
+          </span>
+          <button className="btn" onClick={() => goPage(1)} aria-label="página siguiente" data-testid="next-page">›</button>
+        </div>
+        {(!follow || !playing) && (
+          <button
+            className="btn btn-primary"
+            style={{ width: "100%", marginTop: "0.6rem" }}
+            data-testid="read-from-page"
+            onClick={readFromPage}
+          >
+            🔊 Leer desde esta página
+          </button>
+        )}
+      </div>
+
+      <div className="card">
         <p className="muted">{section?.title}</p>
-        <p className="block-text" data-testid="block-text">{block?.preview}…</p>
+        <button className="btn" onClick={() => setShowText(!showText)}>
+          {showText ? "Ocultar texto" : "Ver texto del bloque"}
+        </button>
+        {showText && (
+          <p className="block-text" data-testid="block-text">{block?.preview}…</p>
+        )}
         <div className="row" style={{ justifyContent: "space-between", marginTop: "0.6rem" }}>
           <span className="player-time" data-testid="elapsed">{fmt(elapsed)}</span>
           <span className="chip" data-testid="block-pos">bloque {idx + 1}/{doc.playlist.length}</span>

@@ -114,3 +114,13 @@ def test_parallel_synthesis_is_correct_and_faster(app_env):
     # No se asierta tiempo exacto para evitar flakiness; elapsed queda como señal:
     # 8×0,2s en serie = 1,6s de TTS mínimo; con pool de 4 la fase TTS ronda 0,4s.
     assert elapsed > 0
+
+
+def test_blocks_have_increasing_pages(app_env):
+    """El mapeo bloque→página existe y es coherente (visor sincronizado)."""
+    doc_id, conn, llm, tts = _ingest(app_env)
+    pages = [r["page"] for r in conn.execute(
+        "SELECT page FROM blocks WHERE document_id=? ORDER BY idx", (doc_id,)).fetchall()]
+    assert pages[0] == 1
+    assert max(pages) > 5          # el paper fixture tiene 14 páginas
+    assert all(b >= a for a, b in zip(pages, pages[1:]))  # nunca retrocede

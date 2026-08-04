@@ -41,13 +41,15 @@ def test_residue_removed():
 
 
 def test_blocks_respect_max_and_keep_content():
-    paras = ["Frase corta uno.", "Frase corta dos.",
-             ("Una frase larga que se repite mucho. " * 60).strip()]
+    paras = [("Frase corta uno.", 1), ("Frase corta dos.", 1),
+             (("Una frase larga que se repite mucho. " * 60).strip(), 2)]
     blocks = split_into_blocks(paras)
-    assert all(len(b) <= HARD_MAX + 50 for b in blocks)
-    total = " ".join(blocks)
+    assert all(len(b) <= HARD_MAX + 50 for b, _ in blocks)
+    total = " ".join(b for b, _ in blocks)
     assert "Frase corta uno." in total and "Frase corta dos." in total
     assert total.count("Una frase larga") == 60
+    assert blocks[0][1] == 1                      # el primer bloque nace en la pág. 1
+    assert all(pg == 2 for _, pg in blocks[1:])   # el párrafo largo viene de la pág. 2
 
 
 def test_heading_titles_strip_html():

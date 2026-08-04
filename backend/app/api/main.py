@@ -87,7 +87,7 @@ def get_document(doc_id: int):
         "SELECT * FROM sections WHERE document_id=? ORDER BY idx", (doc_id,)
     ).fetchall()
     blocks = conn.execute(
-        "SELECT id, section_id, idx, audio_status, duration_ms,"
+        "SELECT id, section_id, idx, audio_status, duration_ms, page,"
         "       substr(text_clean,1,120) AS preview"
         " FROM blocks WHERE document_id=? ORDER BY idx",
         (doc_id,),
@@ -101,6 +101,20 @@ def get_document(doc_id: int):
         "playlist": [dict(b) for b in blocks],
         "position": dict(pos) if pos else None,
     }
+
+
+@app.get("/api/documents/{doc_id}/pdf")
+def original_pdf(doc_id: int, request: Request):
+    """El PDF original para el visor (token en query: lo carga pdf.js/iframe)."""
+    _check_media_token(request)
+    conn = db.connect()
+    doc = conn.execute("SELECT filename FROM documents WHERE id=?", (doc_id,)).fetchone()
+    if doc is None:
+        raise HTTPException(404, "documento no encontrado")
+    path = settings.data_dir / "pdfs" / doc["filename"]
+    if not path.exists():
+        raise HTTPException(404, "archivo no disponible")
+    return FileResponse(path, media_type="application/pdf")
 
 
 @app.get("/api/documents/{doc_id}/blocks/{block_id}/audio", dependencies=[Depends(auth)])

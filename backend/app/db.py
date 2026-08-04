@@ -32,7 +32,8 @@ CREATE TABLE IF NOT EXISTS blocks (
   audio_path TEXT,
   audio_status TEXT NOT NULL DEFAULT 'pending',
   duration_ms INTEGER,
-  tts_cost_cents REAL NOT NULL DEFAULT 0
+  tts_cost_cents REAL NOT NULL DEFAULT 0,
+  page INTEGER NOT NULL DEFAULT 1
 );
 CREATE INDEX IF NOT EXISTS idx_blocks_doc ON blocks(document_id, idx);
 CREATE INDEX IF NOT EXISTS idx_blocks_hash ON blocks(text_hash);
@@ -71,6 +72,7 @@ _db_path: Path | None = None
 MIGRATIONS = [
     ("documents", "rss_published_at", "ALTER TABLE documents ADD COLUMN rss_published_at TEXT"),
     ("documents", "full_mp3_path", "ALTER TABLE documents ADD COLUMN full_mp3_path TEXT"),
+    ("blocks", "page", "ALTER TABLE blocks ADD COLUMN page INTEGER NOT NULL DEFAULT 1"),
 ]
 
 

@@ -62,7 +62,7 @@ fase termina con código pusheado, tests en verde y una demo utilizable.
 
 **Objetivo:** escuchar de verdad desde el iPhone andando. El "modo podcast" completo.
 
-**Alcance (RF):** RF-3.1 (controles, velocidad, saltos ±15s/bloque — escucha lineal, sin índice), RF-3.3 (background + Media Session; aplicar veredicto S0.1), RF-3.4-M (posición persistida y retomable), RF-6.1 (biblioteca con progreso), RF-6.4 (contador de coste visible), RF-7.1 (PWA instalable), RF-7.5 (QR onboarding), RF-7.6 (feed RSS privado: botón "enviar a podcast" por documento → genera el audio restante, concatena y publica episodio).
+**Alcance (RF):** RF-3.6 (vista documento-first: visor PDF con paso de páginas, "leer desde esta página", página sigue al audio — D17), RF-3.1 (controles, velocidad, saltos ±15s/bloque), RF-3.3 (background + Media Session; aplicar veredicto S0.1), RF-3.4-M (posición persistida y retomable), RF-6.1 (biblioteca con progreso), RF-6.4 (contador de coste visible), RF-7.1 (PWA instalable), RF-7.5 (QR onboarding), RF-7.6 (feed RSS privado: botón "enviar a podcast" por documento → genera el audio restante, concatena y publica episodio).
 
 **Entregable:** PWA instalada en el iPhone del autor; sube un PDF desde el móvil, y lo escucha entero con pantalla bloqueada.
 

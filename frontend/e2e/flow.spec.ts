@@ -18,11 +18,21 @@ test("subir → procesar → escuchar → retomar", async ({ page }) => {
   await expect(item).toBeVisible({ timeout: 20_000 });
   await expect(item.getByText(/escuchado \d+%/)).toBeVisible({ timeout: 90_000 });
 
-  // Entrar al reproductor y darle play.
+  // Entrar al documento: el visor del PDF es la vista por defecto.
   await item.click();
   await expect(page.getByTestId("doc-title")).toContainText("Trace-based", {
     timeout: 15_000,
   });
+  await expect(page.getByTestId("pdf-canvas")).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByTestId("page-pos")).toContainText("pág. 1 / 14", {
+    timeout: 20_000,
+  });
+
+  // Pasar página a mano y volver a la 1.
+  await page.getByTestId("next-page").click();
+  await expect(page.getByTestId("page-pos")).toContainText("pág. 2");
+  await expect(page.getByTestId("read-from-page")).toBeVisible();
+
   await page.getByTestId("play-button").click();
 
   // El audio avanza de verdad.
@@ -37,16 +47,28 @@ test("subir → procesar → escuchar → retomar", async ({ page }) => {
   await page.getByTestId("rate-button").click();
   expect(await audio.evaluate((a: HTMLAudioElement) => a.playbackRate)).toBe(1.25);
 
-  // Saltar al bloque siguiente y dejar que guarde posición.
-  await page.getByRole("button", { name: "Siguiente ▸" }).click();
-  await expect(page.getByTestId("block-pos")).toContainText("bloque 2/", {
-    timeout: 15_000,
-  });
-  await page.waitForTimeout(6000); // > intervalo de guardado de posición (5s)
+  // "Leer desde esta página": salta al primer bloque de la pág. 2 (genera si hace falta).
+  await page.getByTestId("read-from-page").click();
+  await expect
+    .poll(
+      async () => {
+        const pos = await page.getByTestId("block-pos").textContent();
+        const t = await audio.evaluate((a: HTMLAudioElement) => a.currentTime);
+        return !pos?.startsWith("bloque 1/") && t > 0.3;
+      },
+      { timeout: 60_000 },
+    )
+    .toBeTruthy();
+  await expect(page.getByTestId("page-pos")).toContainText("pág. 2");
 
-  // Recargar: retoma en el bloque 2 (RF-3.4-M).
+  // Dejar que guarde posición y comprobar que la recarga retoma ahí (RF-3.4-M).
+  await page.waitForTimeout(6000); // > intervalo de guardado de posición (5s)
+  const posText = await page.getByTestId("block-pos").textContent();
+  const blockNum = posText?.match(/bloque (\d+)\//)?.[1];
+  expect(Number(blockNum)).toBeGreaterThan(1); // ya no estamos en el bloque 1
+
   await page.reload();
-  await expect(page.getByTestId("block-pos")).toContainText("bloque 2/", {
+  await expect(page.getByTestId("block-pos")).toContainText(`bloque ${blockNum}/`, {
     timeout: 15_000,
   });
 });

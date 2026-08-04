@@ -65,6 +65,7 @@ El "10x": tiempo muerto convertido en estudio (2-3x) × priorización dirigida (
 | D13 | Hosting personal | **VPS (Hetzner ~6-9€/mes) + Coolify/Dokploy** compartido con las demás apps del autor | Coste fijo multi-app, deploy automático desde GitHub |
 | D14 | Recall / aprendizaje activo | **v1, junto al push-to-talk** (su forma natural es por voz). MVP = escuchar bien | Evitar construirlo dos veces |
 | D15 | Presupuesto APIs | **10-20€/mes** para uso personal (~10-15 papers/mes con TTS API + Claude) | Marca el nivel de cacheo/optimización necesario |
+| D17 | UI documento-first (2026-08-04) | **El visor del PDF original es la pantalla principal**: ves el documento y pasas páginas; los controles de audio/tutor actúan sobre la página visible ("leer desde esta página"). Sincronización a nivel de página vía mapeo bloque→página en la extracción; la página sigue al audio salvo navegación manual. El sync fino por párrafo y tocar-para-escuchar quedan en v1 | Es la idea original del autor: "lector de PDFs potenciado", no un reproductor con texto |
 | D16 | Feed RSS podcast | **En el MVP desde el día 1** (revisado 2026-08-04 tras investigar el ecosistema OSS): la PWA lleva el tutor y la interacción; Apple Podcasts (vía RSS privado) es el reproductor blindado para escucha larga. Patrón validado por proyectos como Audiobookshelf; el audio background de PWAs en iOS tiene fallos documentados (pausas >30s lo matan, controles irregulares) | Camino 0€ con reproducción garantizada en iPhone; si la PWA resulta ir fina, el RSS queda de extra |
 
 ## 5. Requisitos funcionales
@@ -95,7 +96,8 @@ Prioridad MoSCoW: **M** (must, MVP) / **S** (should, v1) / **C** (could, despué
 - **RF-3.1 (M)** Play/pausa, velocidad 0.75x–3x, saltar ±15s, saltar por sección.
 - **RF-3.2 (M)** TTS natural, español e inglés como mínimo; el audio se genera en el idioma original del documento (D9).
 - **RF-3.3 (M)** Audio en background con pantalla bloqueada + controles del sistema (Media Session API). **Prueba de fuego en iPhone la semana 1** (D4); si falla: Capacitor, y como parche inmediato el feed RSS (D16).
-- **RF-3.4 (M)** La posición de escucha se guarda y se retoma en cualquier dispositivo. **(S)** Sincronización visual audio↔texto: ver el texto con el párrafo actual resaltado.
+- **RF-3.4 (M)** La posición de escucha se guarda y se retoma en cualquier dispositivo. **(S)** Sincronización visual audio↔texto fina: párrafo actual resaltado y tocar-para-escuchar.
+- **RF-3.6 (M)** **Vista documento-first (D17)**: visor del PDF original como pantalla principal (pasar páginas, ver figuras/tablas reales); "leer desde esta página"; la página sigue al audio (mapeo bloque→página) salvo navegación manual; texto del bloque disponible como vista secundaria.
 - **RF-3.5 (S)** Descarga offline del audio generado.
 
 ### RF-4. Interacción con el tutor

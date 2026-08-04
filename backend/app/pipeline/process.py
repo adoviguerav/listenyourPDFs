@@ -45,14 +45,14 @@ def process_document(doc_id: int, llm: LLMProvider, use_llm_clean: bool = True) 
             "INSERT INTO sections(document_id, idx, title) VALUES (?,0,?)",
             (doc_id, "Introducción" if lang == "es" else "Introduction"),
         ).lastrowid
-        block_idx = _insert_blocks(conn, doc_id, sec_id, [intro_text], lang, block_idx)
+        block_idx = _insert_blocks(conn, doc_id, sec_id, [(intro_text, 1)], lang, block_idx)
 
     for s_idx, section in enumerate(structure.sections, start=1):
-        cleaned: list[str] = []
+        cleaned: list[tuple[str, int]] = []
         for p in section.paragraphs:
-            if is_table_junk(p):
+            if is_table_junk(p.text):
                 continue
-            c = clean_paragraph(p)
+            c = clean_paragraph(p.text)
             if not c:
                 continue
             if use_llm_clean:
@@ -61,7 +61,7 @@ def process_document(doc_id: int, llm: LLMProvider, use_llm_clean: bool = True) 
                     _track_cost(conn, doc_id, "llm", len(c))
                 except Exception:
                     pass  # la limpieza heurística ya es escuchable
-            cleaned.append(c)
+            cleaned.append((c, p.page))
         blocks = split_into_blocks(cleaned)
         if not blocks:
             continue
@@ -83,11 +83,11 @@ def process_document(doc_id: int, llm: LLMProvider, use_llm_clean: bool = True) 
 
 def _insert_blocks(conn, doc_id, sec_id, blocks, lang, start_idx) -> int:
     idx = start_idx
-    for text in blocks:
+    for text, page in blocks:
         conn.execute(
-            "INSERT INTO blocks(section_id, document_id, idx, text_clean, text_hash)"
-            " VALUES (?,?,?,?,?)",
-            (sec_id, doc_id, idx, text, text_hash(text, settings.tts_provider, lang)),
+            "INSERT INTO blocks(section_id, document_id, idx, text_clean, text_hash, page)"
+            " VALUES (?,?,?,?,?,?)",
+            (sec_id, doc_id, idx, text, text_hash(text, settings.tts_provider, lang), page),
         )
         idx += 1
     return idx
