@@ -59,15 +59,15 @@ fase termina con código pusheado, tests en verde y una demo utilizable.
 
 **Objetivo:** escuchar de verdad desde el iPhone andando. El "modo podcast" completo.
 
-**Alcance (RF):** RF-3.1 (controles, velocidad, saltos), RF-3.3 (background + Media Session; aplicar veredicto S0.1), RF-3.4 (sync audio↔texto, posición persistida), RF-2.2 (navegación dirigida por índice tocable), RF-5.2 (marcas), RF-6.1 (biblioteca con progreso), RF-7.1 (PWA instalable), RF-7.5 (QR onboarding).
+**Alcance (RF):** RF-3.1 (controles, velocidad, saltos), RF-3.3 (background + Media Session; aplicar veredicto S0.1), RF-3.4 (sync audio↔texto, posición persistida), RF-2.2 (navegación dirigida por índice tocable), RF-5.2 (marcas), RF-6.1 (biblioteca con progreso), RF-7.1 (PWA instalable), RF-7.5 (QR onboarding), RF-7.6 (feed RSS privado: botón "enviar a podcast" por documento → genera el audio restante, concatena y publica episodio).
 
 **Entregable:** PWA instalada en el iPhone del autor; sube un PDF desde el móvil, y lo escucha entero con pantalla bloqueada.
 
 **DoD:**
 - El autor completa un paseo de 30 min escuchando un paper sin tocar el móvil salvo para marcar.
 - La posición sobrevive a: bloquear pantalla, perder red, cerrar y reabrir la app.
-- Tests: componentes del reproductor, E2E (Playwright) del flujo subir→procesar→escuchar→retomar, Lighthouse PWA installable.
-- Si S0.1 fue NO-GO: feed RSS activado y verificado en Apple Podcasts (D16).
+- Un documento enviado a podcast aparece como episodio en Apple Podcasts del autor y se reproduce entero con pantalla bloqueada.
+- Tests: componentes del reproductor, E2E (Playwright) del flujo subir→procesar→escuchar→retomar, validación del XML del feed RSS, Lighthouse PWA installable.
 
 ## Fase 3 — Tutor push-to-talk (≈2 semanas)
 

@@ -57,7 +57,7 @@ El "10x": tiempo muerto convertido en estudio (2-3x) × priorización dirigida (
 | D13 | Hosting personal | **VPS (Hetzner ~6-9€/mes) + Coolify/Dokploy** compartido con las demás apps del autor | Coste fijo multi-app, deploy automático desde GitHub |
 | D14 | Recall / aprendizaje activo | **v1, junto al push-to-talk** (su forma natural es por voz). MVP = escuchar bien | Evitar construirlo dos veces |
 | D15 | Presupuesto APIs | **10-20€/mes** para uso personal (~10-15 papers/mes con TTS API + Claude) | Marca el nivel de cacheo/optimización necesario |
-| D16 | Feed RSS podcast | **Plan B decidido por el autor**: solo se activa si la prueba de la semana 1 muestra que iOS corta el audio de la PWA (1-2 días, 0€). Su único fin: escuchar los PDFs vía Apple Podcasts con reproducción nativa garantizada | Redundante si la PWA reproduce bien en iPhone |
+| D16 | Feed RSS podcast | **En el MVP desde el día 1** (revisado 2026-08-04 tras investigar el ecosistema OSS): la PWA lleva el tutor y la interacción; Apple Podcasts (vía RSS privado) es el reproductor blindado para escucha larga. Patrón validado por proyectos como Audiobookshelf; el audio background de PWAs en iOS tiene fallos documentados (pausas >30s lo matan, controles irregulares) | Camino 0€ con reproducción garantizada en iPhone; si la PWA resulta ir fina, el RSS queda de extra |
 
 ## 5. Requisitos funcionales
 
@@ -113,7 +113,7 @@ Prioridad MoSCoW: **M** (must, MVP) / **S** (should, v1) / **C** (could, despué
 - **RF-7.3 (M)** Despliegue en un comando (Docker Compose) + guía de self-hosting en README (VPS/Coolify como camino documentado — D13).
 - **RF-7.4 (M)** Proveedores LLM/TTS/STT intercambiables tras interfaz común (D6-D7): Claude/OpenAI/Gemini/Ollama; OpenAI-o-Gemini TTS/Kokoro/ElevenLabs; Whisper API o local.
 - **RF-7.5 (M)** Onboarding por QR: la instancia muestra un código QR (en la web de escritorio y al arrancar el servidor) que al escanearlo con el móvil abre la PWA lista para "Añadir a pantalla de inicio" — instalación sin stores en Android e iPhone.
-- **RF-7.6 (C)** Feed RSS privado con token (contingencia iOS — D16).
+- **RF-7.6 (M)** Feed RSS de podcast privado protegido por token: cada documento con audio completo aparece como episodio; suscribible desde cualquier app de podcasts (D16).
 - **RF-7.7 (C)** Multiusuario con autenticación para instancias compartidas.
 - **RF-7.8 (C)** Wrapper Capacitor: iOS solo si RF-3.3 falla en PWA; APK Android publicado en GitHub Releases (instalable por QR) como distribución alternativa para usuarios OSS.
 
@@ -129,7 +129,7 @@ Prioridad MoSCoW: **M** (must, MVP) / **S** (should, v1) / **C** (could, despué
 
 ## 7. Alcance por fases
 
-**MVP ("escuchar bien"):** RF-1.1–1.4, RF-2.1–2.2, RF-3.1–3.4, RF-4.1–4.3, RF-5.2, RF-6.1, RF-7.1–7.5. Push-to-talk incluido. Un usuario, sin auth.
+**MVP ("escuchar bien"):** RF-1.1–1.4, RF-2.1–2.2, RF-3.1–3.4, RF-4.1–4.3, RF-5.2, RF-6.1, RF-7.1–7.6. Push-to-talk y feed RSS incluidos. Un usuario, protección por token único.
 
 **v1 ("aprender"):** recall por voz (RF-5.1, 5.3, 5.4), niveles guiado/resumen (RF-2.3–2.6), tablas/ecuaciones (RF-1.5–1.6), comandos de voz (RF-4.4), offline (RF-3.5), estadísticas (RF-6.2).
 
@@ -142,7 +142,7 @@ Prioridad MoSCoW: **M** (must, MVP) / **S** (should, v1) / **C** (could, despué
 
 ## 8. Riesgos técnicos priorizados
 
-1. **Audio background en iOS-PWA** (RF-3.3) — validar semana 1 con un spike mínimo (una página que reproduce un MP3 con Media Session en iPhone bloqueado). Plan B: Capacitor; parche: RSS.
+1. **Audio background en iOS-PWA** (RF-3.3) — riesgo mitigado por el doble canal (D16): el RSS garantiza la escucha larga vía Apple Podcasts. El spike de la semana 1 mide cuánto se puede confiar en el reproductor de la PWA (que sigue siendo necesario para el tutor push-to-talk). Plan B si la PWA resulta inutilizable incluso en foreground: Capacitor.
 2. **Calidad de extracción/limpieza de PDF variados** (RF-1.2) — evaluar PyMuPDF vs docling vs marker con 5 PDFs reales del autor antes de fijar la librería.
 3. **Latencia percibida** (RNF-1) — diseño por chunks desde el día 1, no como optimización posterior.
 4. **Coste TTS descontrolado** (RNF-2) — contador de gasto visible en la UI desde el MVP.
