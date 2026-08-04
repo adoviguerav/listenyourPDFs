@@ -1,0 +1,160 @@
+<title>Spike S0.1 — Audio en iPhone</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{
+  --bg:#f6f7f5; --panel:#ffffff; --ink:#1c2422; --muted:#5b6663;
+  --accent:#0e7a6c; --accent-ink:#ffffff; --line:#dde3e0;
+  --ok:#177245; --warn:#b3541e; --bad:#a02c2c;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#141817; --panel:#1d2321; --ink:#e8ecea; --muted:#9aa5a1;
+  --accent:#2fbfa9; --accent-ink:#0b1512; --line:#2c3532;
+  --ok:#4cc07a; --warn:#e08a4e; --bad:#e06666;
+}}
+:root[data-theme="dark"]{
+  --bg:#141817; --panel:#1d2321; --ink:#e8ecea; --muted:#9aa5a1;
+  --accent:#2fbfa9; --accent-ink:#0b1512; --line:#2c3532;
+  --ok:#4cc07a; --warn:#e08a4e; --bad:#e06666;
+}
+:root[data-theme="light"]{
+  --bg:#f6f7f5; --panel:#ffffff; --ink:#1c2422; --muted:#5b6663;
+  --accent:#0e7a6c; --accent-ink:#ffffff; --line:#dde3e0;
+  --ok:#177245; --warn:#b3541e; --bad:#a02c2c;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:16px/1.55 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+  padding:1rem 1rem 4rem; max-width:42rem; margin-inline:auto}
+h1{font-size:1.35rem;line-height:1.25;text-wrap:balance;margin:0.5rem 0 0.25rem}
+.sub{color:var(--muted);margin:0 0 1.25rem;font-size:0.95rem}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  padding:1rem;margin:0 0 1rem}
+.card h2{font-size:0.8rem;letter-spacing:0.06em;text-transform:uppercase;
+  color:var(--muted);margin:0 0 0.6rem}
+ol{margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:0.5rem}
+button.big{display:block;width:100%;padding:1.1rem;font-size:1.15rem;font-weight:600;
+  border:none;border-radius:12px;background:var(--accent);color:var(--accent-ink);
+  cursor:pointer}
+button.big:active{transform:scale(0.98)}
+button.big:focus-visible,button.mini:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.row{display:flex;gap:0.5rem;margin-top:0.6rem}
+button.mini{flex:1;padding:0.7rem;font-size:0.95rem;font-weight:600;border-radius:10px;
+  border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.state{display:flex;gap:0.75rem;align-items:baseline;margin-top:0.7rem;
+  font-variant-numeric:tabular-nums}
+.state b{font-size:1.6rem;font-weight:700}
+.chip{font-size:0.8rem;padding:0.15rem 0.6rem;border-radius:999px;
+  border:1px solid var(--line);color:var(--muted)}
+.chip.play{color:var(--ok);border-color:var(--ok)}
+.checks{display:flex;flex-direction:column;gap:0.75rem}
+.check{display:grid;grid-template-columns:1fr auto auto;gap:0.5rem;align-items:center}
+.check p{margin:0;font-size:0.95rem}
+.check small{color:var(--muted)}
+.check button{padding:0.55rem 0.8rem;border-radius:10px;border:1px solid var(--line);
+  background:transparent;color:var(--ink);font-weight:700;cursor:pointer;font-size:0.9rem}
+.check button.sel-ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.check button.sel-bad{background:var(--bad);border-color:var(--bad);color:#fff}
+#veredicto{font-weight:700}
+#log{font:0.78rem/1.5 ui-monospace,Menlo,monospace;color:var(--muted);
+  max-height:14rem;overflow-y:auto;margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+</style>
+
+<h1>Prueba de audio con pantalla bloqueada</h1>
+<p class="sub">Spike S0.1 · listenyourPDFs · Abre esto en Safari en tu iPhone</p>
+
+<div class="card">
+  <h2>Pasos</h2>
+  <ol>
+    <li>Pulsa <strong>Reproducir</strong> y sube el volumen.</li>
+    <li><strong>Bloquea el iPhone.</strong> ¿Sigue sonando? (Check 1)</li>
+    <li>En la pantalla de bloqueo: ¿ves controles con el título "Spike S0.1"? Prueba pausa y play. (Check 2)</li>
+    <li>Con la pantalla bloqueada, <strong>pausa y espera 60 segundos</strong>. Dale a play otra vez desde la pantalla de bloqueo. ¿Responde? (Check 3)</li>
+    <li>Vuelve aquí, marca Sí/No en cada check y mándale a Claude el veredicto + una captura del registro.</li>
+  </ol>
+</div>
+
+<div class="card">
+  <button class="big" id="btn">▶ Reproducir</button>
+  <div class="state">
+    <b id="t">0:00</b>
+    <span id="dur" class="chip">–</span>
+    <span id="st" class="chip">parado</span>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Resultados — márcalos tú</h2>
+  <div class="checks">
+    <div class="check"><p>1 · Sigue sonando al bloquear<br><small>lo esencial</small></p><button data-c="c1" data-v="si">Sí</button><button data-c="c1" data-v="no">No</button></div>
+    <div class="check"><p>2 · Controles en pantalla de bloqueo<br><small>título + pausa/play funcionan</small></p><button data-c="c2" data-v="si">Sí</button><button data-c="c2" data-v="no">No</button></div>
+    <div class="check"><p>3 · Play tras pausa de 60 s bloqueado<br><small>el fallo documentado de Safari</small></p><button data-c="c3" data-v="si">Sí</button><button data-c="c3" data-v="no">No</button></div>
+  </div>
+  <p id="veredicto"></p>
+</div>
+
+<div class="card">
+  <h2>Registro de eventos</h2>
+  <pre id="log"></pre>
+</div>
+
+<audio id="a" src="__AUDIO_DATA_URI__" preload="auto"></audio>
+
+<script>
+const a=document.getElementById('a'),btn=document.getElementById('btn'),
+  t=document.getElementById('t'),st=document.getElementById('st'),
+  dur=document.getElementById('dur'),logEl=document.getElementById('log');
+const fmt=s=>isFinite(s)?`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`:'–';
+const KEY='s01log';
+let log=[];try{log=JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){}
+function addLog(m){
+  const line=`${new Date().toTimeString().slice(0,8)} ${m}`;
+  log.push(line);if(log.length>200)log=log.slice(-200);
+  try{localStorage.setItem(KEY,JSON.stringify(log))}catch(e){}
+  logEl.textContent=log.join('\n');logEl.scrollTop=logEl.scrollHeight;
+}
+logEl.textContent=log.join('\n');
+addLog('página cargada');
+
+btn.onclick=()=>{ if(a.paused){a.play().catch(e=>addLog('ERROR play: '+e.message));} else a.pause(); };
+a.addEventListener('loadedmetadata',()=>{dur.textContent=fmt(a.duration)});
+a.addEventListener('play',()=>{btn.textContent='⏸ Pausar';st.textContent='sonando';st.className='chip play';addLog('play @'+fmt(a.currentTime));setMS();});
+a.addEventListener('pause',()=>{btn.textContent='▶ Reproducir';st.textContent='pausado';st.className='chip';addLog('pause @'+fmt(a.currentTime));});
+a.addEventListener('ended',()=>{addLog('ended');});
+a.addEventListener('timeupdate',()=>{t.textContent=fmt(a.currentTime)});
+a.addEventListener('stalled',()=>addLog('stalled'));
+a.addEventListener('error',()=>addLog('ERROR audio: '+(a.error&&a.error.code)));
+document.addEventListener('visibilitychange',()=>addLog('visibilidad: '+document.visibilityState+' @'+fmt(a.currentTime)));
+
+function setMS(){
+  if(!('mediaSession' in navigator)){addLog('MediaSession NO soportada');return;}
+  navigator.mediaSession.metadata=new MediaMetadata({
+    title:'Spike S0.1 — listenyourPDFs',artist:'Prueba de audio',album:'Fase 0'});
+  const acts={play:()=>{a.play();addLog('MS action: play')},
+    pause:()=>{a.pause();addLog('MS action: pause')},
+    seekbackward:()=>{a.currentTime=Math.max(0,a.currentTime-15);addLog('MS action: -15s')},
+    seekforward:()=>{a.currentTime=Math.min(a.duration,a.currentTime+15);addLog('MS action: +15s')}};
+  for(const[k,f]of Object.entries(acts)){try{navigator.mediaSession.setActionHandler(k,f)}catch(e){addLog('MS handler '+k+' no soportado')}}
+  addLog('MediaSession configurada');
+}
+
+const res={};let RKEY='s01res';
+try{Object.assign(res,JSON.parse(localStorage.getItem(RKEY)||'{}'))}catch(e){}
+function paint(){
+  document.querySelectorAll('.check button').forEach(b=>{
+    const sel=res[b.dataset.c]===b.dataset.v;
+    b.className=sel?(b.dataset.v==='si'?'sel-ok':'sel-bad'):'';
+  });
+  const v=document.getElementById('veredicto');
+  if(res.c1&&res.c2&&res.c3){
+    const go=res.c1==='si'&&res.c2==='si';
+    v.textContent='Veredicto: '+(go?(res.c3==='si'?'GO total — la PWA vale como reproductor principal':'GO con matiz — PWA vale para escucha continua; el RSS cubre las pausas largas'):'NO-GO — el RSS/Apple Podcasts será el canal de escucha; la PWA queda para el tutor');
+    addLog('VEREDICTO c1='+res.c1+' c2='+res.c2+' c3='+res.c3);
+  } else v.textContent='';
+}
+document.querySelectorAll('.check button').forEach(b=>b.onclick=()=>{
+  res[b.dataset.c]=b.dataset.v;
+  try{localStorage.setItem(RKEY,JSON.stringify(res))}catch(e){}
+  addLog('check '+b.dataset.c+' = '+b.dataset.v);paint();
+});
+paint();
+</script>

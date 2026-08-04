@@ -1,0 +1,44 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Spike S0.3 — Prueba ciega de voces</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{--bg:#f6f7f5;--panel:#fff;--ink:#1c2422;--muted:#5b6663;--accent:#0e7a6c;--line:#dde3e0}
+@media (prefers-color-scheme: dark){:root{--bg:#141817;--panel:#1d2321;--ink:#e8ecea;--muted:#9aa5a1;--accent:#2fbfa9;--line:#2c3532}}
+body{margin:0 auto;max-width:40rem;padding:1.5rem 1rem;background:var(--bg);color:var(--ink);
+  font:16px/1.5 system-ui,sans-serif}
+h1{font-size:1.3rem}
+.s{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:1rem;margin:0 0 0.8rem}
+.s h3{margin:0 0 0.5rem;font-size:1rem}
+audio{width:100%}
+button{margin-top:0.5rem;padding:0.5rem 1rem;border-radius:8px;border:1px solid var(--line);
+  background:transparent;color:var(--ink);font-weight:600;cursor:pointer}
+button.sel{background:var(--accent);color:#fff;border-color:var(--accent)}
+#res{font-weight:700;white-space:pre-line}
+</style>
+<h1>Prueba ciega de voces TTS</h1>
+<p>Escucha cada muestra SIN mirar cuál es. Marca "Me la pondría 1 hora" en las que aguantarías una hora de paper. Al final pulsa Revelar.</p>
+<div id="list"></div>
+<button id="reveal">Revelar proveedores</button>
+<p id="res"></p>
+<script>
+const SAMPLES=__SAMPLES__;
+const list=document.getElementById('list');const picks=new Set();
+SAMPLES.forEach((s,i)=>{
+  const d=document.createElement('div');d.className='s';
+  d.innerHTML=`<h3>Muestra ${i+1} · ${s.lang.toUpperCase()}</h3>
+    <audio controls preload="none" src="${s.src}"></audio>
+    <button data-i="${i}">Me la pondría 1 hora</button>`;
+  list.appendChild(d);
+});
+list.addEventListener('click',e=>{
+  if(e.target.tagName!=='BUTTON')return;
+  const i=e.target.dataset.i;
+  picks.has(i)?picks.delete(i):picks.add(i);
+  e.target.classList.toggle('sel');
+});
+document.getElementById('reveal').onclick=()=>{
+  document.getElementById('res').textContent=SAMPLES.map((s,i)=>
+    `Muestra ${i+1} (${s.lang}): ${s.prov}${picks.has(String(i))?'  ✓ elegida':''}`).join('\n');
+};
+</script>
