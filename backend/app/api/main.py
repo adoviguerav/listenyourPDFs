@@ -181,6 +181,122 @@ def delete_document(doc_id: int):
     return {"ok": True}
 
 
+# ─── Tutor (F3, A14): pipeline en este proceso + bus en memoria hacia el WS ────
+import asyncio
+import threading
+import uuid
+
+_doc_queues: dict[int, set] = {}          # doc_id → set[asyncio.Queue] (conexiones WS)
+_current_events: dict[int, list] = {}     # ring buffer del request en curso (reconexión)
+_inflight_cancel: dict[int, threading.Event] = {}  # single-flight por documento
+
+
+def _publish(loop: asyncio.AbstractEventLoop, doc_id: int, event: dict) -> None:
+    _current_events.setdefault(doc_id, []).append(event)
+    for q in list(_doc_queues.get(doc_id, ())):
+        loop.call_soon_threadsafe(q.put_nowait, event)
+
+
+def _tutor_thread(loop, doc_id: int, request_id: str, question: str,
+                  block_id: int | None, cancel: threading.Event) -> None:
+    from ..pipeline.extract import detect_language
+    from ..providers import registry
+    from ..tutor.engine import answer_stream
+    from ..tutor.voice import speak_stream
+
+    llm, tts = registry.get_llm(), registry.get_tts()
+    answer_parts: list[str] = []
+
+    def deltas():
+        for d in answer_stream(doc_id, question, block_id, llm):
+            if cancel.is_set():
+                return
+            answer_parts.append(d)
+            _publish(loop, doc_id, {"type": "answer.delta",
+                                    "request_id": request_id, "text": d})
+            yield d
+
+    # La respuesta sale en el idioma de la pregunta (D9: el tutor habla tu idioma).
+    lang = detect_language(question) if len(question) > 15 else "es"
+    try:
+        for ev in speak_stream(deltas(), tts, lang):
+            if cancel.is_set():
+                return
+            if ev["type"] == "sentence.audio":
+                _publish(loop, doc_id, {"type": "sentence.audio",
+                                        "request_id": request_id,
+                                        "idx": ev["idx"], "url": ev["url"]})
+            else:
+                _publish(loop, doc_id, {"type": "answer.done",
+                                        "request_id": request_id,
+                                        "first_audio_ms": ev["first_audio_ms"]})
+    except Exception as e:  # noqa: BLE001 — el fallo viaja al cliente
+        _publish(loop, doc_id, {"type": "answer.error",
+                                "request_id": request_id, "error": str(e)[:300]})
+    finally:
+        _current_events.pop(doc_id, None)
+
+
+@app.post("/api/documents/{doc_id}/ask", dependencies=[Depends(auth)])
+async def ask(doc_id: int, request: Request):
+    conn = db.connect()
+    doc = conn.execute("SELECT * FROM documents WHERE id=?", (doc_id,)).fetchone()
+    if doc is None:
+        raise HTTPException(404, "documento no encontrado")
+
+    content_type = request.headers.get("content-type", "")
+    transcript: str | None = None
+    if content_type.startswith("multipart/"):
+        form = await request.form()
+        upload = form.get("audio")
+        if upload is None:
+            raise HTTPException(400, "falta el campo 'audio'")
+        block_id = int(form.get("block_id") or 0) or None
+        audio_bytes = await upload.read()
+        from ..providers import registry
+        stt = registry.get_stt()
+        transcript = await asyncio.to_thread(
+            stt.transcribe, audio_bytes,
+            upload.content_type or "audio/webm", doc["language"],
+        )
+        question = transcript
+    else:
+        body = await request.json()
+        question = (body.get("question") or "").strip()
+        block_id = body.get("block_id")
+    if not question:
+        raise HTTPException(400, "pregunta vacía")
+
+    # Single-flight: una pregunta nueva cancela la respuesta en curso (A14).
+    prev = _inflight_cancel.get(doc_id)
+    if prev:
+        prev.set()
+    cancel = threading.Event()
+    _inflight_cancel[doc_id] = cancel
+    _current_events.pop(doc_id, None)
+
+    request_id = uuid.uuid4().hex[:12]
+    loop = asyncio.get_running_loop()
+    threading.Thread(
+        target=_tutor_thread,
+        args=(loop, doc_id, request_id, question, block_id, cancel),
+        daemon=True,
+    ).start()
+    return JSONResponse({"request_id": request_id, "transcript": transcript},
+                        status_code=200)
+
+
+@app.get("/audio/answers/{name}")
+def answer_audio(name: str, request: Request):
+    _check_media_token(request)
+    if not re.fullmatch(r"[0-9a-f]{32}\.mp3", name):
+        raise HTTPException(404, "no encontrado")
+    path = settings.data_dir / "audio" / "answers" / name
+    if not path.exists():
+        raise HTTPException(404, "no encontrado")
+    return FileResponse(path, media_type="audio/mpeg")
+
+
 @app.post("/api/documents/{doc_id}/publish-rss", dependencies=[Depends(auth)], status_code=202)
 def publish_rss(doc_id: int):
     conn = db.connect()
@@ -239,7 +355,6 @@ async def ws_events(ws: WebSocket):
     El worker es otro proceso; el estado compartido es SQLite, así que este
     endpoint observa la BD (~1s) y empuja los cambios por el socket.
     """
-    import asyncio
 
     if settings.auth_token and not secrets.compare_digest(
         ws.query_params.get("token", ""), settings.auth_token
@@ -250,8 +365,24 @@ async def ws_events(ws: WebSocket):
     doc_id = int(ws.query_params.get("doc", "0"))
     known_ready: set[int] = set()
     last_status = None
+
+    # Bus del tutor (A14): cola propia de esta conexión + replay del request en curso.
+    bus_q: asyncio.Queue = asyncio.Queue()
+    _doc_queues.setdefault(doc_id, set()).add(bus_q)
+    for ev in list(_current_events.get(doc_id, ())):
+        await ws.send_json(ev)
     try:
         while True:
+            # El timeout de 1s ES el tick del polling de BD (block.ready/doc.status);
+            # los eventos del tutor salen al instante por la cola.
+            try:
+                ev = await asyncio.wait_for(bus_q.get(), timeout=1.0)
+                await ws.send_json(ev)
+                while not bus_q.empty():
+                    await ws.send_json(bus_q.get_nowait())
+                continue
+            except asyncio.TimeoutError:
+                pass
             conn = db.connect()
             doc = conn.execute(
                 "SELECT status FROM documents WHERE id=?", (doc_id,)).fetchone()
@@ -267,9 +398,10 @@ async def ws_events(ws: WebSocket):
                     known_ready.add(r["id"])
                     await ws.send_json({"type": "block.ready", "document_id": doc_id,
                                         "block_id": r["id"]})
-            await asyncio.sleep(1)
     except WebSocketDisconnect:
         pass
+    finally:
+        _doc_queues.get(doc_id, set()).discard(bus_q)
 
 
 @app.get("/api/costs", dependencies=[Depends(auth)])

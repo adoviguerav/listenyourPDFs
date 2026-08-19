@@ -20,6 +20,8 @@ class Settings:
 
         self.llm_provider = os.environ.get("LLM_PROVIDER", "claude")
         self.tts_provider = os.environ.get("TTS_PROVIDER", "gemini")
+        self.stt_provider = os.environ.get("STT_PROVIDER", "gemini")
+        self.gemini_stt_model = os.environ.get("GEMINI_STT_MODEL", "gemini-2.5-flash")
 
         self.anthropic_api_key = os.environ.get("ANTHROPIC_API_KEY", "")
         self.gemini_api_key = os.environ.get("GEMINI_API_KEY", "")

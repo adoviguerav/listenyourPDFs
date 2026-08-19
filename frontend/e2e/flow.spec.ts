@@ -10,8 +10,10 @@ test("subir → procesar → escuchar → retomar", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "listenyourPDFs" })).toBeVisible();
 
-  // Subir el PDF fixture.
-  await page.getByTestId("file-input").setInputFiles(FIXTURE);
+  // Subir el PDF fixture (solo si la biblioteca está vacía: los specs comparten backend).
+  if ((await page.getByTestId("doc-item").count()) === 0) {
+    await page.getByTestId("file-input").setInputFiles(FIXTURE);
+  }
 
   // Aparece en la biblioteca y termina de procesarse (extracción + arranque TTS).
   const item = page.getByTestId("doc-item").first();

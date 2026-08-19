@@ -1,0 +1,7 @@
+[
+  {"question": "¿Qué es un trace tree y para qué sirve?", "expected_contains": "trace"},
+  {"question": "¿Qué ventaja tiene la especialización de tipos en este sistema?", "expected_contains": "type"},
+  {"question": "¿Qué dice el documento sobre el blacklisting?", "expected_contains": "blacklist"},
+  {"question": "¿Cuál es la capital de Mongolia?", "expected_contains": null},
+  {"question": "¿Qué resultados de rendimiento reporta el paper?", "expected_contains": null}
+]

@@ -81,11 +81,27 @@ fase termina con código pusheado, tests en verde y una demo utilizable.
 
 **Entregable:** durante la escucha, botón grande de hablar; pregunta por voz respondida en <10s con referencia a la sección.
 
+**Milestones (tests primero; no se avanza de milestone sin sus tests en verde):**
+- **M1 — STT:** interfaz `STTProvider` + GeminiSTT (audio nativo) + FakeSTT.
+- **M2 — Recuperación:** `build_context`: bloques de la sección actual + búsqueda léxica en el resto, con tope de tamaño.
+- **M3 — Motor del tutor:** respuesta en streaming anclada; contrato "FUENTE: <sección>" / "FUENTE: no está en el documento"; validación de que la sección citada existe (anti-alucinación de cita); registro en `qa_log` con coste.
+- **M4 — Voz pipelined:** TTS por frases según llegan los deltas (nunca esperar el texto completo); eventos `sentence.audio` con métrica `first_audio_ms` (L3).
+- **M5 — API + PWA:** `POST /ask` (texto o audio multipart) + eventos por WS + botón push-to-talk en la PWA con pausa/retoma exacta; E2E.
+- **M6 — Examen:** harness de 20 preguntas con report (aciertos con cita, rechazos, latencias); ejecutable con fakes (CI) y con APIs reales (autor).
+
 **DoD:**
 - 20 preguntas de prueba sobre un paper: ≥18 respondidas correctamente con cita, 0 respuestas inventadas (las 2 restantes deben ser "no está en el documento" o rechazo correcto).
 - **Latencia (L3, arquitectura §7): la primera voz del tutor suena en <5s típicos y <10s p95** desde que sueltas el botón — medido sobre las 20 preguntas de prueba. Diseño obligatorio: Claude en streaming + TTS pipelined por frases; nunca esperar la respuesta completa.
 - La reproducción retoma exactamente donde se pausó tras cada interacción.
 - Tests: contrato STT mockeado, evaluación automatizada de anclaje (respuestas contienen referencia válida a sección existente), E2E del ciclo completo.
+
+**Estado (2026-08-19): ✅ construida y verificada en su mecánica** — 19 tests de backend
+(contrato STT, retrieval, motor con anti-alucinación de cita y rechazo, pipeline de voz
+por frases con métrica `first_audio_ms`, API+WS, harness) + E2E del ciclo completo en
+navegador (grabar → transcript → respuesta hablada → retoma). **Puerta de re-validación
+en Fase 4** (requiere las API keys del autor, sin red de APIs en esta sesión): ejecutar
+`python -m eval.exam` con las 20 preguntas reales sobre Claude+Gemini y corregir el
+≥18/20 y las latencias reales — el harness y las preguntas de ejemplo están listos.
 
 ## Fase 4 — Release OSS v0.1 (≈1 semana)
 

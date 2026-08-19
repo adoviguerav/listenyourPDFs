@@ -9,6 +9,8 @@ export default defineConfig({
   testDir: "./e2e",
   timeout: 120_000,
   retries: 0,
+  workers: 1,          // los specs comparten backend y biblioteca: nada de carreras
+  fullyParallel: false,
   use: {
     baseURL: "http://localhost:3000",
     launchOptions: process.env.PLAYWRIGHT_CHROMIUM_PATH
@@ -19,9 +21,9 @@ export default defineConfig({
     {
       command:
         `sh -c 'rm -rf ${DATA_DIR} && ` +
-        `LYP_DATA_DIR=${DATA_DIR} LLM_PROVIDER=fake TTS_PROVIDER=espeak LYP_WARMUP_BLOCKS=4 ` +
+        `LYP_DATA_DIR=${DATA_DIR} LLM_PROVIDER=fake TTS_PROVIDER=espeak STT_PROVIDER=fake LYP_WARMUP_BLOCKS=4 ` +
         `${VENV_BIN}/python -m app.worker & ` +
-        `LYP_DATA_DIR=${DATA_DIR} LLM_PROVIDER=fake TTS_PROVIDER=espeak LYP_WARMUP_BLOCKS=4 ` +
+        `LYP_DATA_DIR=${DATA_DIR} LLM_PROVIDER=fake TTS_PROVIDER=espeak STT_PROVIDER=fake LYP_WARMUP_BLOCKS=4 ` +
         `${VENV_BIN}/uvicorn app.api.main:app --port 8000'`,
       cwd: "../backend",
       url: "http://localhost:8000/docs",

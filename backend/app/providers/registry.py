@@ -14,6 +14,17 @@ def get_llm(name: str | None = None) -> LLMProvider:
     raise ValueError(f"LLM_PROVIDER desconocido: {name}")
 
 
+def get_stt(name: str | None = None):
+    name = name or settings.stt_provider
+    if name == "gemini":
+        from .gemini_stt import GeminiSTT
+        return GeminiSTT()
+    if name == "fake":
+        from .fakes import FakeSTT
+        return FakeSTT()
+    raise ValueError(f"STT_PROVIDER desconocido: {name}")
+
+
 def get_tts(name: str | None = None) -> TTSProvider:
     name = name or settings.tts_provider
     if name == "gemini":

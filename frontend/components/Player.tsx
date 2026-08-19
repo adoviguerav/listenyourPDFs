@@ -5,6 +5,7 @@
 // foreground se rearma el <audio> y la Media Session desde el estado guardado.
 import { useCallback, useEffect, useRef, useState } from "react";
 import PdfViewer from "@/components/PdfViewer";
+import PushToTalk, { TutorEvent } from "@/components/PushToTalk";
 import { api, Block, DocDetail, mediaUrl, wsUrl } from "@/lib/api";
 
 const fmt = (ms: number) => {
@@ -23,6 +24,7 @@ export default function Player({ doc: initial }: { doc: DocDetail }) {
   const [rate, setRate] = useState(1);
   const [elapsed, setElapsed] = useState(initial.position?.offset_ms ?? 0);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const wasPlayingRef = useRef(false);
   const idxRef = useRef(idx);
   idxRef.current = idx;
   const docRef = useRef(doc);
@@ -72,7 +74,13 @@ export default function Player({ doc: initial }: { doc: DocDetail }) {
     return () => clearInterval(t);
   }, [playing, savePosition]);
 
-  // WS: refrescar bloques según se generan (A4).
+  // WS: refrescar bloques según se generan (A4) + repartir eventos del tutor.
+  const tutorHandlersRef = useRef<Set<(ev: TutorEvent) => void>>(new Set());
+  const subscribeTutor = useCallback((h: (ev: TutorEvent) => void) => {
+    tutorHandlersRef.current.add(h);
+    return () => tutorHandlersRef.current.delete(h);
+  }, []);
+
   useEffect(() => {
     let ws: WebSocket | null = null;
     let closed = false;
@@ -83,6 +91,9 @@ export default function Player({ doc: initial }: { doc: DocDetail }) {
         if (msg.type === "block.ready" || msg.type === "doc.status") {
           const fresh = await api<DocDetail>(`/api/documents/${doc.id}`);
           setDoc((d) => ({ ...fresh, position: d.position }));
+        } else if (typeof msg.type === "string" &&
+                   (msg.type.startsWith("answer.") || msg.type === "sentence.audio")) {
+          tutorHandlersRef.current.forEach((h) => h(msg as TutorEvent));
         }
       };
       ws.onclose = () => { if (!closed) setTimeout(connect, 2000); };
@@ -230,6 +241,20 @@ export default function Player({ doc: initial }: { doc: DocDetail }) {
           <button className="btn" onClick={next}>Siguiente ▸</button>
         </div>
       </div>
+
+      <PushToTalk
+        docId={doc.id}
+        blockId={block?.id}
+        subscribe={subscribeTutor}
+        onStart={() => {
+          wasPlayingRef.current = playing;
+          audioRef.current?.pause();
+        }}
+        onFinish={() => {
+          // RF-4.1: retomar exactamente donde se pausó.
+          if (wasPlayingRef.current) audioRef.current?.play().catch(() => {});
+        }}
+      />
 
       <audio
         ref={audioRef}

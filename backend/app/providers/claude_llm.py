@@ -25,6 +25,20 @@ INTRO_SYSTEM = (
 )
 
 
+TUTOR_SYSTEM = (
+    "Eres el tutor de audio de un lector de PDFs. El usuario está ESCUCHANDO un documento "
+    "y te hace una pregunta por voz. Reglas estrictas:\n"
+    "1. Responde SOLO con información de los extractos del documento que se te dan. "
+    "Si la respuesta no está en ellos, dilo claramente y no inventes nada.\n"
+    "2. Responde en el idioma de la pregunta, en tono de profesor cercano, y BREVE "
+    "(esto se convierte en voz: 3-6 frases salvo que pidan más).\n"
+    "3. Tu última línea debe ser EXACTAMENTE 'FUENTE: <título de la sección usada>' "
+    "copiando el título literal de un extracto, o 'FUENTE: no está en el documento' "
+    "si no pudiste responder desde los extractos.\n"
+    "4. No uses markdown ni listas: prosa hablada."
+)
+
+
 class ClaudeLLM:
     name = "claude"
 
@@ -68,3 +82,43 @@ class ClaudeLLM:
             settings.claude_model_tutor,
             max_tokens=1024,
         )
+
+    def answer_stream(self, question: str, context: list[dict], lang: str):
+        """Deltas de texto en streaming (SSE de la API de Anthropic)."""
+        import json as _json
+
+        excerpts = "\n\n".join(
+            f"[Sección: {c['section_title']}]\n{c['text']}" for c in context
+        ) or "(sin extractos: el documento no aportó contexto)"
+        with self.client.stream(
+            "POST",
+            API,
+            headers={
+                "x-api-key": self.api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+            json={
+                "model": settings.claude_model_tutor,
+                "max_tokens": 1024,
+                "stream": True,
+                "system": TUTOR_SYSTEM,
+                "messages": [{
+                    "role": "user",
+                    "content": f"Extractos del documento:\n\n{excerpts}\n\n"
+                               f"Pregunta del oyente: {question}",
+                }],
+            },
+        ) as r:
+            r.raise_for_status()
+            for line in r.iter_lines():
+                if not line.startswith("data: "):
+                    continue
+                try:
+                    ev = _json.loads(line[6:])
+                except ValueError:
+                    continue
+                if ev.get("type") == "content_block_delta":
+                    text = ev.get("delta", {}).get("text", "")
+                    if text:
+                        yield text

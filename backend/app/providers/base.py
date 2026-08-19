@@ -32,3 +32,11 @@ class TTSProvider(Protocol):
     name: str
 
     def synthesize(self, text: str, lang: str) -> AudioResult: ...
+
+
+class STTProvider(Protocol):
+    name: str
+
+    def transcribe(self, audio: bytes, mime: str, lang_hint: str) -> str:
+        """Transcribe la pregunta hablada del usuario (push-to-talk, RF-4.1)."""
+        ...

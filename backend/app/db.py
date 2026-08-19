@@ -55,6 +55,16 @@ CREATE TABLE IF NOT EXISTS positions (
   offset_ms INTEGER NOT NULL DEFAULT 0,
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+CREATE TABLE IF NOT EXISTS qa_log (
+  id INTEGER PRIMARY KEY,
+  document_id INTEGER REFERENCES documents(id) ON DELETE CASCADE,
+  block_id INTEGER,
+  question TEXT NOT NULL,
+  answer TEXT NOT NULL,
+  section_ref TEXT,
+  cost_cents REAL NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
 CREATE TABLE IF NOT EXISTS costs (
   id INTEGER PRIMARY KEY,
   document_id INTEGER REFERENCES documents(id) ON DELETE SET NULL,

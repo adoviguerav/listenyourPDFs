@@ -20,6 +20,7 @@
 | A11 | Despliegue | **Docker Compose** (backend+worker+frontend) en **VPS con Coolify** | HTTPS automático. El dominio del autor: **pendiente de decisión** (subdominio propio / compra / sslip.io) |
 | A12 | Extracción PDF | **pymupdf4llm** (veredicto S0.2) | Detrás de una interfaz `Extractor`; docling como 2ª integración en v1 |
 | A13 | Síntesis en paralelo | **Pool de hilos en el worker** (`LYP_TTS_CONCURRENCY`, defecto 4) para jobs `synthesize` | Arranque de un documento: de ~40s a ~10s. Implementado en F1 |
+| A14 | Ejecución del tutor (F3, decidido por debate) | **En el proceso API, async** (no vía cola): STT→Claude streaming→TTS por frases con `asyncio.create_task`; `POST /ask` responde 202 inmediato con `request_id`; eventos al cliente por **bus en memoria** fusionado en el bucle WS (`wait_for(queue.get(), timeout=1)` — el timeout es el tick del polling de BD que sigue sirviendo a `block.ready`) | La cola SQLite es para trabajo durable (batch); una respuesta hablada es efímera e interactiva — meterla por la cola quemaría 1-2s del presupuesto L3 en polling y cuantizaría el streaming. Audio de frases por **URL** (no base64: infla 33% y bloquea los deltas de texto en el mismo socket). Single-flight (un `/ask` nuevo cancela el anterior); ring buffer del request en curso para reconexiones WS; reinicio a mitad de respuesta = se vuelve a preguntar (aceptado) |
 
 ## 2. Componentes
 
@@ -88,10 +89,12 @@ GET    /api/costs                      gasto por documento y mes (RNF-2)
 
 **WebSocket** `/ws?token=...` — eventos servidor→cliente:
 ```
-job.progress      {document_id, phase, pct}          extracción/síntesis
+doc.status        {document_id, status}              estado del procesamiento
 block.ready       {document_id, block_id}            el reproductor encadena sin esperar
-answer.delta      {request_id, text_delta}           respuesta del tutor en streaming
-answer.audio      {request_id, audio_url}            audio de la respuesta listo
+answer.delta      {request_id, text}                 respuesta del tutor en streaming (bus, A14)
+sentence.audio    {request_id, idx, url}             MP3 de cada frase según se sintetiza (bus)
+answer.done       {request_id, first_audio_ms}       fin de respuesta + métrica L3 (bus)
+answer.error      {request_id, error}                fallo del pipeline del tutor (bus)
 ```
 Cliente→servidor solo control ligero (subscribe a un documento); las acciones van por REST.
 
@@ -100,7 +103,7 @@ Cliente→servidor solo control ligero (subscribe a un documento); las acciones 
 ```python
 class LLMProvider(Protocol):
     def clean_section(text, doc_context) -> CleanResult          # limpieza para audio
-    def answer(question, doc_excerpts, lang) -> Iterator[str]    # Q&A anclado, streaming
+    def answer_stream(question, context, lang) -> Iterator[str]  # Q&A anclado, streaming; termina con línea "FUENTE: <sección>"
 class TTSProvider(Protocol):
     def synthesize(text, voice, lang) -> AudioResult             # bytes MP3 + duración
 class STTProvider(Protocol):
